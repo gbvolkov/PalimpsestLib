@@ -1,0 +1,8 @@
+__pycache__
+.venv
+.pytest
+.vscode
+data
+logs
+
+gv.env

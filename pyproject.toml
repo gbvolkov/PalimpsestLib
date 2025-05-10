@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Palimpsest"
+version = "0.1.1"
+description = "Anonimizes and Deanonimizes data."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name="Georgy Volkov", email="gbvolkov@gmail.com" }
+]
+keywords = ["AI", "data", "anonimization", "deanonimization", "LLM",]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+requires-python = ">=3.12.11"
+
+# Define dependencies as a list under [project]
+dependencies = [
+    "python-dotenv",
+    "presidio_analyzer[transformers]",
+    "presidio_anonymizer",
+    "nltk",
+    "natasha",
+    "pymorphy3",
+    "pymorphy3-dicts-ru",
+    "spacy",
+    "gliner",
+    "flair",
+    "faker",
+    "rapidfuzz",
+    "petrovna",
+    "pytrovich"
+]
+
+# Define URLs as a separate table under [project]
+[project.urls]
+Source = "https://github.com/gbvolkov/PalimpsestLib"
+Tracker = "https://github.com/gbvolkov/PalimpsestLib/issues"
