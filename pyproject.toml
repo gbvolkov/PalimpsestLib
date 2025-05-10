@@ -17,7 +17,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
-requires-python = ">=3.12.11"
+requires-python = ">=3.12.6"
 
 # Define dependencies as a list under [project]
 dependencies = [
