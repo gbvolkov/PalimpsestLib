@@ -12,7 +12,8 @@ Palimpsest is a Python library, based on presidio framework, designed for revers
 You can install Palimsest directly from PyPI once it is published:
 
 ```bash
-pip install PalimpsestLib
+
+pip install palimpsest@git+https://github.com/gbvolkov/PalimpsestLib.git
 ```
 
 If you are installing from source (assuming you have the `pyproject.toml` file in the root directory):
