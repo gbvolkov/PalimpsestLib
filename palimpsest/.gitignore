@@ -1,6 +1,7 @@
 __pycache__
 .venv
 .pytest
+.pytest_cahche
 .vscode
 data
 logs
