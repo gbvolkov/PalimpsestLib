@@ -116,7 +116,7 @@ def create_nlp_engine_with_flair(
     would return NlpArtifacts such as POS and lemmas.
     :param model_path: Flair model path.
     """
-    from recognizers.flair_recognizer import FlairRecognizer
+    from .recognizers.flair_recognizer import FlairRecognizer
 
     registry = RecognizerRegistry()
     registry.load_predefined_recognizers()
@@ -147,7 +147,7 @@ def create_nlp_engine_with_natasha(
     would return NlpArtifacts such as POS and lemmas.
     :param model_path: Flair model path.
     """
-    from recognizers.natasha_recogniser import NatashaSlovnetRecognizer
+    from .recognizers.natasha_recogniser import NatashaSlovnetRecognizer
 
     registry = RecognizerRegistry()
     registry.load_predefined_recognizers()
@@ -180,7 +180,7 @@ def create_nlp_engine_with_gliner(
     would return NlpArtifacts such as POS and lemmas.
     :param model_path: Flair model path.
     """
-    from recognizers.gliner_recogniser import GlinerRecognizer
+    from .recognizers.gliner_recogniser import GlinerRecognizer
 
     registry = RecognizerRegistry()
     registry.load_predefined_recognizers()
