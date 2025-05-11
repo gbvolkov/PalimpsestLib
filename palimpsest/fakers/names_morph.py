@@ -88,7 +88,7 @@ def get_morphs(full_name: str) -> dict[str, dict[str, str]]:
 
 if __name__ == "__main__":
     from faker import Faker
-    from palimpsest.fakers.fakers_funcs import calc_hash
+    from fakers.fakers_funcs import calc_hash
     
     fake = Faker(locale="ru-RU")
     for i in range(0,1023):
