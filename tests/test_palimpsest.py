@@ -8,8 +8,8 @@ def processor():
 
 
 def test_anonimize_deanonimize(processor):
-    from logger_factory import setup_logging
-    from sample.llm_simplistic import generate_answer
+    from palimpsest.logger_factory import setup_logging
+    from palimpsest.sample.llm_simplistic import generate_answer
     import logging
 
     setup_logging("anonimizer", project_console_level=logging.DEBUG)
@@ -30,8 +30,8 @@ def test_anonimize_deanonimize(processor):
 
 #This test can be checked only manually!!!!
 def test_anonimized_llm_call(processor):
-    from logger_factory import setup_logging
-    from sample.llm_simplistic import generate_answer
+    from palimpsest.logger_factory import setup_logging
+    from palimpsest.sample.llm_simplistic import generate_answer
     import logging
 
     setup_logging("anonimizer", project_console_level=logging.DEBUG)

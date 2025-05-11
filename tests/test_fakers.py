@@ -1,5 +1,5 @@
 import pytest
-from fakers.faker_context import FakerContext
+from palimpsest.fakers.faker_context import FakerContext
 
 @ pytest.fixture
 def ctx():
