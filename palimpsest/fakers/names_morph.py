@@ -84,31 +84,3 @@ def get_morphs(full_name: str) -> dict[str, dict[str, str]]:
         plural[cname] = " ".join(declined)
 
     return {"singular": singular, "plural": plural}
-
-
-if __name__ == "__main__":
-    from faker import Faker
-    from fakers.fakers_funcs import calc_hash
-    
-    fake = Faker(locale="ru-RU")
-    for i in range(0,1023):
-        try:
-            name = fake.first_name() + " " + fake.last_name() 
-            forms = get_morphs(name)
-            hash_nom = calc_hash(name)
-            for case, val in forms["singular"].items():
-                hash_var = calc_hash(val)
-                if hash_var != hash_nom:
-                    print(f"{name} ({hash_nom}): {case}: {val} ({hash_var})")
-                    break
-            if hash_var != hash_nom:
-                continue
-            for case, val in forms["plural"].items():
-                hash_var = calc_hash(val)
-                if hash_var != hash_nom:
-                    print(f"{name} ({hash_nom}): plural_{case}: {val} ({hash_var})")
-                    break
-        except:
-            hash_non = calc_hash(name)
-            print(f"{name} ({hash_nom}); EXCEPTION")
-            print()

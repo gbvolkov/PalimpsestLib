@@ -2,7 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pymorphy3
-from fakers.names_morph import get_morphs
+from .fakers.names_morph import get_morphs
 
 _nlp = None  # spaCy model, loaded once
 _morph = pymorphy3.MorphAnalyzer(lang='ru')

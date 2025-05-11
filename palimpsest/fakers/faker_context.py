@@ -16,7 +16,7 @@ class FakerContext:
     def __init__(self, module=None):
         # if you don’t pass a module, we introspect the current one
         if module is None:
-            import fakers.fakers_funcs as module
+            from .fakers import fakers_funcs as module
         self._module = module
 
         # each context gets its own two maps

@@ -27,11 +27,11 @@ def _length_factory(tokenizer: Any = None):
         return len
 
 def _anonimizer_factory(ctx: FakerContext):
-    from utils.sentence_splitter import chunk_sentences
+    from .utils.sentence_splitter import chunk_sentences
     from nltk.tokenize import sent_tokenize
 
-    from analyzer_engine_provider import analyzer_engine
-    from recognizers.regex_recognisers import RU_ENTITIES
+    from .analyzer_engine_provider import analyzer_engine
+    from .recognizers.regex_recognisers import RU_ENTITIES
 
     analyzer = analyzer_engine("gliner", "gliner-community/gliner_large-v2.5")
     tokenizer =  AutoTokenizer.from_pretrained("gliner-community/gliner_large-v2.5")

@@ -123,31 +123,3 @@ def chunk_sentences(sentences: List[str], max_chunk_size: int, overlap_size: int
         chunks.append("\n".join(current_chunk))
     
     return chunks
-
-# ---------------------
-# Example usage:
-if __name__ == "__main__":
-    # Example: assume additional_content is in Russian and we obtain sentences using sent_tokenize.
-    # For demonstration, we'll simulate with sample strings.
-    
-    # Simulated sentences (each with a known length in characters).
-    s1 = "A" * 10  # length 10
-    s2 = "B" * 15  # length 15
-    s3 = "C" * 12  # length 12
-    
-    # Suppose additional_content was split into these three sentences.
-    sentences = [s1, s2, s3]
-    
-    # Set parameters:
-    max_chunk_size = 25
-    overlap_size = 10
-    
-    # For this example, we'll use a dummy _len that is simply len.
-    # In your application, _len is produced by your length_factory.
-    _len = len  # Replace with your tokenizer-based _len when available.
-    
-    chunks = chunk_sentences(sentences, max_chunk_size, overlap_size, _len)
-    
-    print("Resulting chunks:")
-    for chunk in chunks:
-        print(repr(chunk))

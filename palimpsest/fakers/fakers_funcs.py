@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 
 from faker import Faker
 
-from fakers.faker_utils import validate_name
+from .fakers.faker_utils import validate_name
 
 fake = Faker(locale="ru-RU")
 
