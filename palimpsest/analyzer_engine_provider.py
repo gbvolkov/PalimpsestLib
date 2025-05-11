@@ -12,7 +12,7 @@ from presidio_analyzer.nlp_engine import (
     NlpEngineProvider,
 )
 import spacy
-from .recognizers.regex_recognisers import (
+from recognizers.regex_recognisers import (
     ru_internal_passport_recognizer, 
     ru_phone_recognizer,
     SNILSRecognizer,
