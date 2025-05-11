@@ -9,7 +9,7 @@ from presidio_anonymizer.operators import Decrypt
 
 from transformers import AutoTokenizer
 
-from fakers.faker_context import FakerContext
+from .fakers.faker_context import FakerContext
 
 import config
 
