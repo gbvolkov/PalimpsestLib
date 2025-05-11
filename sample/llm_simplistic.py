@@ -48,11 +48,8 @@ if __name__ == "__main__":
 
     setup_logging("anonimizer_web", other_console_level=logging.DEBUG, project_console_level=logging.DEBUG)
 
-    text = """Клиент Степан Степанов (4519227557) по поручению Ивана Иванова обратился в "Интерлизинг" с предложением купить трактор. 
-    Для оплаты используется его карта 4095260993934932. 
-    Позвоните ему 9867777777 или 9857777237.
-    Или можно по адресу г. Санкт-Петербург, Сенная Площадь, д1/2кв17
-    Посмотреть его данные можно https://client.ileasing.ru/name=stapanov:3000 или зайти на 182.34.35.12/
-    """    
-    system_prompt = """Преобразуй текст в записку для записи в CRM. Текст должен быть хорошо структурирован и понятен с первого взгляда"""
+    with open("data/text.txt", encoding="utf-8") as f:
+        text = f.read()
+    with open("data/prompt.txt", encoding="utf-8") as f:
+        system_prompt = f.read()
     print(generate_answer(system_prompt, text))

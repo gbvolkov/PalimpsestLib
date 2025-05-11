@@ -79,7 +79,7 @@ def _anonimizer_factory(ctx: FakerContext):
                     "RU_BANK_ACC": OperatorConfig("custom", {"lambda": _ctx.fake_account}),
                     })
 
-        return result.text, result.items, analyzer_results
+        return result.text, result.items, final_text, analyzer_results
     
     def deanonimizer_simple(text, entities):
         def deanonimize(item):
@@ -134,7 +134,7 @@ def _anonimizer_factory(ctx: FakerContext):
             deanonimized_text  = deanonimized_text.replace(item["text"], item["restored"])
 
 
-        return deanonimized_text, result.items, analized_anon_results
+        return deanonimized_text, result.items, analized_anon_text, analized_anon_results
 
     return anonimizer, deanonimizer, analyze
 
@@ -144,23 +144,25 @@ class Palimpsest():
         self._anonimizer, self._deanonimizer, _ = _anonimizer_factory(self._ctx)
         self._anon_entries = None
         self._anon_analysis = None
+        self._anon_analized_text = None
         self._anonimized_text = ""
         self._deanon_analysis = None
+        self._deanon_analized_text = None
         self._deanonimized_text = ""
         self._verbose = verbose
     def anonimize(self, text: str) -> str:
-        self._anonimized_text, self._anon_entries, self._anon_analysis = self._anonimizer(text)
+        self._anonimized_text, self._anon_entries, self._anon_analized_text, self._anon_analysis = self._anonimizer(text)
         if self._verbose:
-            debug_log("ANONIMIZED", text, self._anonimized_text, self._anon_entries, self._ctx, self._anon_analysis)
+            debug_log("ANONIMIZATION", text, self._anonimized_text, self._anon_entries, self._ctx, self._anon_analized_text, self._anon_analysis)
         return self._anonimized_text
     
     def deanonimize(self, anonimized_text: str = None) -> str:
         if anonimized_text == None:
             anonimized_text = self._anonimized_text
         if self._anon_entries:
-            self._deanonimized_text, deanon_entries, self._deanon_analysis = self._deanonimizer(anonimized_text, self._anon_entries)
+            self._deanonimized_text, deanon_entries, self._deanon_analized_text, self._deanon_analysis = self._deanonimizer(anonimized_text, self._anon_entries)
             if self._verbose:
-                debug_log("DEANONIMIZED", anonimized_text, self._deanonimized_text, deanon_entries, self._ctx, self._deanon_analysis)
+                debug_log("DEANONIMIZATION", anonimized_text, self._deanonimized_text, deanon_entries, self._ctx, self._deanon_analized_text, self._deanon_analysis)
             return self._deanonimized_text
         else:
             return anonimized_text
@@ -169,23 +171,25 @@ class Palimpsest():
         self._ctx.reset()
 
 
-def debug_log(action: str, input_text: str, output_text: str, action_entries: EngineResult, ctx: FakerContext, action_analysis: list[RecognizerResult]):
+def debug_log(action: str, input_text: str = None, output_text: str = None, action_entries: EngineResult = None, ctx: FakerContext = None, analised_text: str = None, action_analysis: list[RecognizerResult] = None):
     debug = logger.debug
     debug(f"\n+======================================{action}=====================================+")
-    debug(f"\n>====================={action} INPUT:\n{input_text}")
-    debug(f"\n>====================={action} OUTPUT:\n{output_text}")
-    debug(f"\n>============================{action} ANALYSIS================================")
-    for r in action_analysis:
-        debug(f"{r.entity_type}: `{input_text[r.start:r.end]}` (score={r.score:.2f})) , Recognizer:{r.recognition_metadata['recognizer_name']}")
-    debug(f"\n>============================{action} ENTRIES================================")
-    for r in action_entries:
-        debug(f"\ttype: {r.entity_type};  value: {r.text};  operator: {r.operator}")
-        #debug(f"{r.entity_type}: `{input_text[r.start:r.end]}` (score={r.score:.2f})) , Recognizer:{r.recognition_metadata['recognizer_name']}")
-    debug(f"\n>============================{action} CONTEXT================================")
-    debug(  f"\n/============================{action} FAKED_VALUES:")
-    for hash in ctx._faked:
-        debug(f"\thash: {hash};  true: {ctx._faked[hash]['true']};  fake: {ctx._faked[hash]['fake']}")
-    debug(  f"\n/============================{action} TRUE_VALUES:")
-    for hash in ctx._true:
-        debug(f"\thash: {hash};  true: {ctx._true[hash]['true']};  fake: {ctx._true[hash]['fake']}")
-    return
+    if input_text: debug(f"\n>====================={action} INPUT:\n{input_text}")
+    if output_text: debug(f"\n>====================={action} OUTPUT:\n{output_text}")
+    if action_analysis:
+        debug(f"\n>============================{action} ANALYSIS================================")
+        for r in action_analysis:
+            debug(f"{r.entity_type}: `{analised_text[r.start:r.end] if analised_text else "ND"}` (score={r.score:.2f})) , Recognizer:{r.recognition_metadata['recognizer_name']}")
+    if action_entries:
+        debug(f"\n>============================{action} ENTRIES================================")
+        for r in action_entries:
+            debug(f"\ttype: {r.entity_type};  value: {r.text};  operator: {r.operator}")
+    if ctx: 
+        debug(f"\n>============================{action} CONTEXT================================")
+        debug(  f"\n/============================{action} FAKED_VALUES:")
+        for hash in ctx._faked:
+            debug(f"\thash: {hash};  true: {ctx._faked[hash]['true']};  fake: {ctx._faked[hash]['fake']}")
+        debug(  f"\n/============================{action} TRUE_VALUES:")
+        for hash in ctx._true:
+            debug(f"\thash: {hash};  true: {ctx._true[hash]['true']};  fake: {ctx._true[hash]['fake']}")
+        return
