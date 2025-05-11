@@ -6,7 +6,7 @@ import functools
 
 from rapidfuzz import fuzz, process
 
-from fakers.faker_utils import calc_hash
+from .fakers.faker_utils import calc_hash
 
 class FakerContext:
     """
