@@ -44,7 +44,7 @@ def generate_answer(system_prompt: str, user_request: str) -> Tuple[str, str]:
 
 if __name__ == "__main__":
     import logging
-    from logger_factory import setup_logging
+    from palimpsest.logger_factory import setup_logging
 
     setup_logging("anonimizer_web", other_console_level=logging.DEBUG, project_console_level=logging.DEBUG)
 
