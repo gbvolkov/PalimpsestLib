@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "Palimpsest"
-version = "0.1.13"
+version = "0.1.14"
 description = "Anonimizes and Deanonimizes data."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -36,6 +36,11 @@ dependencies = [
     "petrovna",
     "pytrovich"
 ]
+
+# Tell setuptools to only auto-discover palimpsest/* and skip sample/*
+[tool.setuptools.packages.find]
+include = ["palimpsest*"]
+exclude = ["sample*", "tests*"]
 
 # Define URLs as a separate table under [project]
 [project.urls]
