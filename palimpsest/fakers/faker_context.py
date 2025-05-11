@@ -30,6 +30,11 @@ class FakerContext:
 
         # bind defake
         setattr(self, "defake", self.defake)
+    
+    def reset(self):
+        self._true: dict[str, dict] = {}
+        self._faked: dict[str, dict] = {}
+
 
 
     def _wrap(self, func):
