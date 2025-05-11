@@ -11,7 +11,7 @@ from transformers import AutoTokenizer
 
 from .fakers.faker_context import FakerContext
 
-import config
+from .config import *
 
 import logging
 
@@ -39,7 +39,7 @@ def _anonimizer_factory(ctx: FakerContext):
     supported = analyzer.get_supported_entities() + RU_ENTITIES
     supported.remove("IN_PAN")
     engine = AnonymizerEngine()
-    cr_key = config.CRYPRO_KEY
+    cr_key = CRYPRO_KEY
     _ctx = ctx
     
     def analyze(text, analizer_entities=supported):

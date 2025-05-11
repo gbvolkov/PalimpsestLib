@@ -1,13 +1,13 @@
 from typing import Tuple, Any
 
-import config
+from palimpsest.config import *
 
 from langchain_mistralai import ChatMistralAI
 from langchain_community.chat_models import ChatYandexGPT
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
-from fakers import *
+from palimpsest.fakers import *
 
 # Setting up LLM
 #llm = ChatMistralAI(model="mistral-small-latest", temperature=1, frequency_penalty=0.3)
