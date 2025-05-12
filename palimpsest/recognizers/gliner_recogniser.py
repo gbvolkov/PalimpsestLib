@@ -1,5 +1,7 @@
 from typing import Optional, List, Tuple, Set
 
+import torch
+
 from presidio_analyzer import AnalyzerEngine, EntityRecognizer, RecognizerResult
 
 from gliner import GLiNER
@@ -8,6 +10,8 @@ import re
 import logging
 logger = logging.getLogger(__name__)
 
+# Determine device (GPU if available, else CPU)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def merge_spans(results, entity_type, text, delim_pattern=r'^[\s,;:\-]+$'):
     spans = [r for r in results if r.entity_type == entity_type]
@@ -59,6 +63,11 @@ class GlinerRecognizer(EntityRecognizer):
             name="GlinerRecognizer",
         )
         self._model = GLiNER.from_pretrained(model_path, local_files_only=True)
+        # Move model to device explicitly
+        try:
+            self._model.to(device)
+        except Exception:
+            logger.warning(f"Could not move GLiNER model to device {device}")
 
     def is_language_supported(self, language: str) -> bool:
         # Принудительно говорим Presidio: "вызывайте меня всегда"
