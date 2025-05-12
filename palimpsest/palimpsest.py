@@ -27,8 +27,8 @@ def _length_factory(tokenizer: Any = None):
         return len
 
 def _anonimizer_factory(ctx: FakerContext):
-    from .utils.sentence_splitter import chunk_sentences
-    from nltk.tokenize import sent_tokenize
+    from .utils.sentence_splitter import split_text
+    #from nltk.tokenize import sent_tokenize
 
     from .analyzer_engine_provider import analyzer_engine
     from .recognizers.regex_recognisers import RU_ENTITIES
@@ -43,12 +43,13 @@ def _anonimizer_factory(ctx: FakerContext):
     _ctx = ctx
     
     def analyze(text, analizer_entities=supported):
-        sentences = sent_tokenize(text, language='russian')
-        texts = chunk_sentences(sentences, max_chunk_size=768, overlap_size=0, _len=calc_len)    
+        #sentences = sent_tokenize(text, language='russian')
+        #texts = chunk_sentences(sentences, max_chunk_size=768, overlap_size=0, _len=calc_len)    
+        chunks = split_text(text, max_chunk_size=768, _len=calc_len)
         analyzer_results = []
         shift = 0
         final_text = ""
-        for chunk in texts:
+        for chunk in chunks:
             analized = analyzer.analyze(text=chunk, entities=analizer_entities, language='en', return_decision_process=False)
             analized = [
                 RecognizerResult(r.entity_type, r.start + shift, r.end + shift, r.score, r.analysis_explanation, r.recognition_metadata)
@@ -103,7 +104,6 @@ def _anonimizer_factory(ctx: FakerContext):
                 return Decrypt().operate(text=item.text, params={"key": cr_key})
             else:
                 return item.text
-
 
         analized_anon_text, analized_anon_results = analyze(text)#, ["person", "house_address"])
         

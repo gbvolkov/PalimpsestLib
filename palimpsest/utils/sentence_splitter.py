@@ -1,6 +1,7 @@
 from functools import lru_cache
-from typing import Any, Callable, List
-from nltk.tokenize import word_tokenize
+from typing import Any, Callable, List, Tuple
+
+from nltk.tokenize import word_tokenize, sent_tokenize
 
 # ---------------------
 # Helper: Split a single long word into subwords
@@ -67,10 +68,6 @@ def preprocess_sentences(sentences: List[str], max_chunk_size: int, _len: Callab
             processed.append(sentence)
     return processed
 
-# ---------------------
-# Main function: chunk_sentences.
-# First, preprocess sentences so that none exceed max_chunk_size.
-# Then, accumulate sentences into chunks (with optional overlap).
 def chunk_sentences(sentences: List[str], max_chunk_size: int, overlap_size: int = 0, _len: Callable[[str], int] = len) -> List[str]:
     # Preprocess sentences to ensure none is longer than max_chunk_size.
     sentences = preprocess_sentences(sentences, max_chunk_size-overlap_size, _len)
@@ -96,7 +93,7 @@ def chunk_sentences(sentences: List[str], max_chunk_size: int, overlap_size: int
                 idx += 1
             else:
                 # Finalize the current chunk.
-                chunks.append("\n".join(current_chunk))
+                chunks.append(" ".join(current_chunk))
                 # Compute overlap from the end of the current_chunk.
                 overlap_sentences = []
                 overlap_length = 0
@@ -120,6 +117,59 @@ def chunk_sentences(sentences: List[str], max_chunk_size: int, overlap_size: int
                     idx += 1
 
     if current_chunk:
-        chunks.append("\n".join(current_chunk))
+        chunks.append(" ".join(current_chunk))
     
+    return chunks
+
+def split_text_by_lines(
+    text: str,
+    max_chunk_size: int,
+    _len: Callable[[str], int] = len
+) -> List[Tuple[str, int]]:
+    """
+    Split `text` into chunks of at most `max_size` characters,
+    breaking only between lines. Lines longer than max_size
+    become their own chunk. Returns a list of (chunk, length).
+    """
+    chunks: List[Tuple[str, int]] = []
+    current: List[str] = []
+    current_size = 0  # running total of len(part) for part in current
+
+    def flush_current():
+        nonlocal current_size
+        if current:
+            chunk = ''.join(current)
+            chunks.append((chunk, current_size))
+            current.clear()
+            current_size = 0
+
+    for line in text.splitlines(keepends=True):
+        line_len = _len(line)
+        # Would this line overflow the current chunk?
+        if current_size + line_len > max_chunk_size:
+            # flush what we've got
+            flush_current()
+            # if the single line is itself too big, emit it alone
+            if line_len > max_chunk_size:
+                chunks.append((line, line_len))
+                continue
+        # otherwise, accumulate it
+        current.append(line)
+        current_size += line_len
+
+    # flush any remaining
+    flush_current()
+    return chunks
+
+# Main function.
+def split_text(text: str, max_chunk_size: int, _len: Callable[[str], int] = len) -> List[str]:
+    chunks = []
+    lines = split_text_by_lines(text, max_chunk_size=max_chunk_size, _len=_len)
+
+    for i, (line, line_length) in enumerate(lines, 1):
+        if line_length > max_chunk_size:
+            sentences = sent_tokenize(line, language='russian')
+            chunks.extend(chunk_sentences(sentences=sentences, max_chunk_size=max_chunk_size, _len=_len))
+        else:
+            chunks.append(line)
     return chunks
