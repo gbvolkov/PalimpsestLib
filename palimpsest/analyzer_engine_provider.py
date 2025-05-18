@@ -20,6 +20,7 @@ from .recognizers.regex_recognisers import (
     RUBankAccountRecognizer,
     RUCreditCardRecognizer
 )
+from .recognizers.natasha_recogniser import NatashaSlovnetRecognizer
 
 
 def create_nlp_engine_with_transformers(
@@ -147,7 +148,6 @@ def create_nlp_engine_with_natasha(
     would return NlpArtifacts such as POS and lemmas.
     :param model_path: Flair model path.
     """
-    from .recognizers.natasha_recogniser import NatashaSlovnetRecognizer
 
     registry = RecognizerRegistry()
     registry.load_predefined_recognizers()
@@ -162,7 +162,7 @@ def create_nlp_engine_with_natasha(
     nlp_configuration = {
         "nlp_engine_name": "spacy",
         #"models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
-        "models": [{"lang_code": "en", "model_name": "ru_core_news_sm"}],
+        "models": [{"lang_code": "en", "model_name": "ru_core_news_lg"}],
     }
     registry.add_recognizer(natasha_recognizer)
     registry.remove_recognizer("SpacyRecognizer")
@@ -254,6 +254,8 @@ def analyzer_engine(
         model_family, model_path, ta_key, ta_endpoint
     )
     analyzer = AnalyzerEngine(nlp_engine=nlp_engine, registry=registry)
+    natasha_recognizer = NatashaSlovnetRecognizer()
+    analyzer.registry.add_recognizer(natasha_recognizer)
     analyzer.registry.add_recognizer(ru_internal_passport_recognizer)
     analyzer.registry.add_recognizer(ru_phone_recognizer)
     analyzer.registry.add_recognizer(SNILSRecognizer())

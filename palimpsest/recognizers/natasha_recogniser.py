@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class NatashaSlovnetRecognizer(EntityRecognizer):
     def __init__(self):
         # мы отдаем только три базовых типа из Natasha: PER, LOC, ORG
-        supported_entities = ["PERSON", "LOCATION", "ORGANIZATION"]
+        supported_entities = ["RU_PERSON", "RU_ORGANIZATION"] #, "LOCATION"]
         super().__init__(
             supported_entities=supported_entities,
             name="NatashaSlovnetRecognizer",
@@ -40,13 +40,14 @@ class NatashaSlovnetRecognizer(EntityRecognizer):
         doc.tag_ner(self.ner_tagger)
 
         results = []
+
         for span in doc.spans:
             # Переводим PER/LOC/ORG → Presidio-тизеры
             label = span.type  # "PER", "LOC", "ORG"
             presidio_label = {
-                "PER": "PERSON",
-                "LOC": "LOCATION",
-                "ORG": "ORGANIZATION",
+                "PER": "RU_PERSON",
+                #"LOC": "LOCATION",
+                "ORG": "RU ORGANIZATION",
             }.get(label, label)
             # фильтруем, если у нас есть entities-фильтр
             if entities and presidio_label not in entities:
@@ -79,6 +80,6 @@ if __name__ == "__main__":
     """        
 
     print("\n=== Russian call ===")
-    result = engine.analyze(text=text_ru, language="en", return_decision_process=True)
+    result = engine.analyze(text=text, language="en", return_decision_process=True)
     for r in result:
         print(f"{r.entity_type}: `{text_ru[r.start:r.end]}` (score={r.score:.2f})) , Recognizer:{r.recognition_metadata['recognizer_name']}")

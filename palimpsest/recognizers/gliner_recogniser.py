@@ -46,10 +46,10 @@ class GlinerRecognizer(EntityRecognizer):
     ):
         # map them to the Presidio-standard types:
         self.label_map = {
-            "person":             "RU_PERSON",
-            "person_name":        "RU_PERSON",
-            "organization":       "RU_ORGANIZATION",
-            "organization_name":  "RU_ORGANIZATION",
+            #"person":             "RU_PERSON",
+            #"person_name":        "RU_PERSON",
+            #"organization":       "RU_ORGANIZATION",
+            #"organization_name":  "RU_ORGANIZATION",
             "address":            "RU_ADDRESS",
             "house_address":      "RU_ADDRESS",
             "city":               "RU_CITY",
