@@ -74,7 +74,7 @@ def _anonimizer_factory(ctx: FakerContext):
                     "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.fake_phone}),
                     "IP_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_ip}),
                     "URL": OperatorConfig("custom", {"lambda": _ctx.fake_url}),
-                    "EMAIL": OperatorConfig("custom", {"lambda": _ctx.fake_email}),
+                    "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_email}),
                     "RU_PASSPORT": OperatorConfig("custom", {"lambda": _ctx.fake_passport}),
                     "SNILS": OperatorConfig("custom", {"lambda": _ctx.fake_snils}),
                     "INN": OperatorConfig("custom", {"lambda": _ctx.fake_inn}),
