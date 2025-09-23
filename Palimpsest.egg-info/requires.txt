@@ -1,0 +1,14 @@
+python-dotenv
+presidio_analyzer[transformers]
+presidio_anonymizer
+nltk
+natasha
+pymorphy3
+pymorphy3-dicts-ru
+spacy
+gliner
+flair
+faker
+rapidfuzz
+petrovna
+pytrovich
