@@ -66,6 +66,18 @@ ru_phone_recognizer = PatternRecognizer(
     name="RUPhoneRecognizer",
 )
 
+ticket_number_recogniser = PatternRecognizer(
+    supported_entity="TICKET_NUMBER",
+    patterns=[
+        Pattern(
+            name="any",
+            regex=r"\bIL\d{2}\d{9}\b",
+            score=0.99
+        ),
+    ],
+    name="TicketNumber",
+)
+
 # ——— 2) SNILS with checksum via petrovna ———
 class SNILSRecognizer(EntityRecognizer):
     def load(self) -> None:

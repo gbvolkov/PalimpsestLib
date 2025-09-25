@@ -15,6 +15,7 @@ import spacy
 from .recognizers.regex_recognisers import (
     ru_internal_passport_recognizer, 
     ru_phone_recognizer,
+    ticket_number_recogniser,
     SNILSRecognizer,
     INNRecognizer,
     RUBankAccountRecognizer,
@@ -258,6 +259,7 @@ def analyzer_engine(
     analyzer.registry.add_recognizer(natasha_recognizer)
     analyzer.registry.add_recognizer(ru_internal_passport_recognizer)
     analyzer.registry.add_recognizer(ru_phone_recognizer)
+    analyzer.registry.add_recognizer(ticket_number_recogniser)
     analyzer.registry.add_recognizer(SNILSRecognizer())
     analyzer.registry.add_recognizer(INNRecognizer())
     analyzer.registry.add_recognizer(RUBankAccountRecognizer())
