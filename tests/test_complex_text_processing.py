@@ -25,9 +25,10 @@ def test_comlext_text(processor):
     from copy import deepcopy
     processor.reset_context()
     anon = processor.anonimize(_TEXT)
-
+    print(anon)
     answer = generate_answer(_SYSTEM_PROMPT_1, anon)
     # 1. LLM response recevied
 
     deanon = processor.deanonimize(answer) #check deanonimized results in logs
+    print(deanon)
     # 1. Deanonimized
