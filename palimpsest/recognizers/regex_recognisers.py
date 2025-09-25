@@ -71,7 +71,7 @@ ticket_number_recogniser = PatternRecognizer(
     patterns=[
         Pattern(
             name="any",
-            regex=r"\bIL\d{2}\d{9}\b",
+            regex=r"\bIL\d{2}\-\d{9}\b",
             score=0.99
         ),
     ],
