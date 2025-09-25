@@ -26,7 +26,12 @@ def _length_factory(tokenizer: Any = None):
     else:
         return len
 
-def _anonimizer_factory(ctx: FakerContext):
+
+def _filter_dict(d: dict, valid_keys)-> dict:
+    valid = set(valid_keys)
+    return {k: v for k, v in d.items() if k in valid}
+
+def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
     from .utils.sentence_splitter import split_text
     #from nltk.tokenize import sent_tokenize
 
@@ -42,6 +47,43 @@ def _anonimizer_factory(ctx: FakerContext):
     cr_key = CRYPRO_KEY
     _ctx = ctx
     
+    anon_operators = {
+        "DEFAULT": OperatorConfig("encrypt", {"key": cr_key}),
+        "RU_ORGANIZATION": OperatorConfig("custom", {"lambda": _ctx.fake_organization}),
+        "RU_CITY": OperatorConfig("keep"),
+        "RU_PERSON": OperatorConfig("custom", {"lambda": _ctx.fake_name}),
+        "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_house}),
+        "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.fake_card}),
+        "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.fake_phone}),
+        "IP_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_ip}),
+        "URL": OperatorConfig("custom", {"lambda": _ctx.fake_url}),
+        "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_email}),
+        "RU_PASSPORT": OperatorConfig("custom", {"lambda": _ctx.fake_passport}),
+        "SNILS": OperatorConfig("custom", {"lambda": _ctx.fake_snils}),
+        "INN": OperatorConfig("custom", {"lambda": _ctx.fake_inn}),
+        "RU_BANK_ACC": OperatorConfig("custom", {"lambda": _ctx.fake_account}),
+    }
+    if run_entities: 
+        anon_operators = _filter_dict(anon_operators, run_entities)
+
+    deanon_operators = {
+        "DEFAULT": OperatorConfig("keep"),
+        "RU_ORGANIZATION": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "RU_CITY": OperatorConfig("keep"),
+        "RU_PERSON": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.defake}),
+        "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "IP_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake}),
+        "URL": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "RU_PASSPORT": OperatorConfig("custom", {"lambda": _ctx.defake}),
+        "SNILS": OperatorConfig("custom", {"lambda": _ctx.defake}),
+        "INN": OperatorConfig("custom", {"lambda": _ctx.defake}),
+        "RU_BANK_ACC": OperatorConfig("custom", {"lambda": _ctx.defake}),
+    }
+    if run_entities: 
+        deanon_operators = _filter_dict(deanon_operators, run_entities)
+
     def analyze(text, analizer_entities=supported):
         #sentences = sent_tokenize(text, language='russian')
         #texts = chunk_sentences(sentences, max_chunk_size=768, overlap_size=0, _len=calc_len)    
@@ -65,21 +107,7 @@ def _anonimizer_factory(ctx: FakerContext):
         result = engine.anonymize(
             text=final_text,
             analyzer_results=analyzer_results,
-            operators={"DEFAULT": OperatorConfig("encrypt", {"key": cr_key}),
-                    "RU_ORGANIZATION": OperatorConfig("custom", {"lambda": _ctx.fake_organization}),
-                    "RU_CITY": OperatorConfig("keep"),
-                    "RU_PERSON": OperatorConfig("custom", {"lambda": _ctx.fake_name}),
-                    "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_house}),
-                    "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.fake_card}),
-                    "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.fake_phone}),
-                    "IP_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_ip}),
-                    "URL": OperatorConfig("custom", {"lambda": _ctx.fake_url}),
-                    "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_email}),
-                    "RU_PASSPORT": OperatorConfig("custom", {"lambda": _ctx.fake_passport}),
-                    "SNILS": OperatorConfig("custom", {"lambda": _ctx.fake_snils}),
-                    "INN": OperatorConfig("custom", {"lambda": _ctx.fake_inn}),
-                    "RU_BANK_ACC": OperatorConfig("custom", {"lambda": _ctx.fake_account}),
-                    })
+            operators=anon_operators)
 
         return result.text, result.items, final_text, analyzer_results
     
@@ -111,21 +139,7 @@ def _anonimizer_factory(ctx: FakerContext):
         result = engine.anonymize(
             text=analized_anon_text,
             analyzer_results=analized_anon_results,
-
-            operators={"DEFAULT": OperatorConfig("keep"),
-                    "RU_ORGANIZATION": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
-                    "RU_CITY": OperatorConfig("keep"),
-                    "RU_PERSON": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
-                    "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
-                    "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.defake}),
-                    "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
-                    "IP_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake}),
-                    "URL": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
-                    "RU_PASSPORT": OperatorConfig("custom", {"lambda": _ctx.defake}),
-                    "SNILS": OperatorConfig("custom", {"lambda": _ctx.defake}),
-                    "INN": OperatorConfig("custom", {"lambda": _ctx.defake}),
-                    "RU_BANK_ACC": OperatorConfig("custom", {"lambda": _ctx.defake}),
-                    })
+            operators=deanon_operators)
 
         deanonimized_text = result.text
         deanonimized_entities = [
@@ -140,9 +154,9 @@ def _anonimizer_factory(ctx: FakerContext):
     return anonimizer, deanonimizer, analyze
 
 class Palimpsest():
-    def __init__(self, verbose=False):
+    def __init__(self, verbose=False, run_entities: List[str] = None):
         self._ctx = FakerContext()
-        self._anonimizer, self._deanonimizer, _ = _anonimizer_factory(self._ctx)
+        self._anonimizer, self._deanonimizer, _ = _anonimizer_factory(self._ctx, run_entities)
         self._anon_entries = None
         self._anon_analysis = None
         self._anon_analized_text = None
