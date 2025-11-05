@@ -85,7 +85,7 @@ class FlairRecognizer(EntityRecognizer):
         elif model and not model_path:
             self.model = model
         elif not model and model_path:
-            logger.into(f"Loading model from {model_path}")
+            logger.info(f"Loading model from {model_path}")
             self.model = SequenceTagger.load(model_path)
         else:
             logger.info(f"Loading model for language {supported_language}")

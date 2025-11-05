@@ -38,7 +38,7 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
     from .analyzer_engine_provider import analyzer_engine
     from .recognizers.regex_recognisers import RU_ENTITIES
 
-    analyzer = analyzer_engine("gliner", "gliner-community/gliner_large-v2.5")
+    analyzer = analyzer_engine("gliner", "gliner-community/gliner_large-v2.5", run_entities=run_entities)
     tokenizer =  AutoTokenizer.from_pretrained("gliner-community/gliner_large-v2.5")
     calc_len = _length_factory(tokenizer)
     supported = analyzer.get_supported_entities() + RU_ENTITIES
@@ -54,6 +54,7 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
         "RU_ORGANIZATION": OperatorConfig("custom", {"lambda": _ctx.fake_organization}),
         "RU_CITY": OperatorConfig("keep"),
         "RU_PERSON": OperatorConfig("custom", {"lambda": _ctx.fake_name}),
+        "PERSON": OperatorConfig("custom", {"lambda": _ctx.fake_name}),
         "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.fake_house}),
         "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.fake_card}),
         "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.fake_phone}),
@@ -64,6 +65,7 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
         "SNILS": OperatorConfig("custom", {"lambda": _ctx.fake_snils}),
         "INN": OperatorConfig("custom", {"lambda": _ctx.fake_inn}),
         "RU_BANK_ACC": OperatorConfig("custom", {"lambda": _ctx.fake_account}),
+        "Person": OperatorConfig("custom", {"lambda": _ctx.fake_name}),
     }
     if run_entities: 
         anon_operators = _filter_dict(anon_operators, run_entities)
@@ -74,6 +76,7 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
         "RU_ORGANIZATION": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
         "RU_CITY": OperatorConfig("keep"),
         "RU_PERSON": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "PERSON": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
         "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
         "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.defake}),
         "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
@@ -157,8 +160,8 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
     return anonimizer, deanonimizer, analyze
 
 class Palimpsest():
-    def __init__(self, verbose=False, run_entities: List[str] = None):
-        self._ctx = FakerContext()
+    def __init__(self, verbose=False, run_entities: List[str] = None, locale: str = "ru-RU"):
+        self._ctx = FakerContext(locale=locale)
         self._anonimizer, self._deanonimizer, _ = _anonimizer_factory(self._ctx, run_entities)
         self._anon_entries = None
         self._anon_analysis = None
@@ -168,6 +171,7 @@ class Palimpsest():
         self._deanon_analized_text = None
         self._deanonimized_text = ""
         self._verbose = verbose
+        self._locale=locale
     def anonimize(self, text: str) -> str:
         self._anonimized_text, self._anon_entries, self._anon_analized_text, self._anon_analysis = self._anonimizer(text)
         if self._verbose:

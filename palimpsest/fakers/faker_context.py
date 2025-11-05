@@ -7,13 +7,15 @@ import functools
 from rapidfuzz import fuzz, process
 
 from .faker_utils import calc_hash
+from .fakers_funcs import fake_factory
 
 class FakerContext:
     """
     A context that finds every function named fake_* in the fakers module
     and turns it into a method which records into context-local maps.
     """
-    def __init__(self, module=None):
+    def __init__(self, module=None, locale = "ru_RU"):
+        fake_factory(locale=locale)
         # if you don’t pass a module, we introspect the current one
         if module is None:
             from . import fakers_funcs as module

@@ -39,15 +39,16 @@ class GlinerRecognizer(EntityRecognizer):
     def __init__(
         self,
         supported_language: str = "ru",
-        supported_entities: Optional[List[str]] = None,
+        run_entities: Optional[List[str]] = None,
         check_label_groups: Optional[Tuple[Set, Set]] = None,
         model_path: Optional[str] = "gliner-community/gliner_large-v2.5",
         
     ):
         # map them to the Presidio-standard types:
-        self.label_map = {
-            #"person":             "RU_PERSON",
-            #"person_name":        "RU_PERSON",
+
+        self.label_map  = {
+            "person":             "PERSON",
+            "person_name":        "PERSON",
             #"organization":       "RU_ORGANIZATION",
             #"organization_name":  "RU_ORGANIZATION",
             "address":            "RU_ADDRESS",
@@ -55,6 +56,9 @@ class GlinerRecognizer(EntityRecognizer):
             "city":               "RU_CITY",
         }
 
+        if run_entities:
+            self.label_map = {k: v for k, v in self.label_map.items() if v in run_entities}
+        
         supported_entities = list(set(self.label_map.values()))
         self.raw_labels = list(self.label_map.keys())
         super().__init__(

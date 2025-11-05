@@ -174,6 +174,7 @@ def create_nlp_engine_with_natasha(
 
 def create_nlp_engine_with_gliner(
     model_path: str,
+    run_entities: Optional[List[str]] = None,
 ) -> Tuple[NlpEngine, RecognizerRegistry]:
     """
     Instantiate an NlpEngine with a FlairRecognizer and a small spaCy model.
@@ -192,7 +193,7 @@ def create_nlp_engine_with_gliner(
     if not spacy.util.is_package(spacy_model):
         spacy.cli.download(spacy_model)
     # Using a small spaCy model + a Flair NER model
-    gliner_recognizer = GlinerRecognizer()
+    gliner_recognizer = GlinerRecognizer(run_entities=run_entities)
     nlp_configuration = {
         "nlp_engine_name": "spacy",
         #"models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
@@ -210,6 +211,7 @@ def nlp_engine_and_registry(
     model_path: str,
     ta_key: Optional[str] = None,
     ta_endpoint: Optional[str] = None,
+    run_entities: Optional[List[str]] = None,
 ) -> Tuple[NlpEngine, RecognizerRegistry]:
     """Create the NLP Engine instance based on the requested model.
     :param model_family: Which model package to use for NER.
@@ -229,7 +231,7 @@ def nlp_engine_and_registry(
     elif "natasha" in model_family.lower():
         engine, registry = create_nlp_engine_with_natasha(model_path)
     elif "gliner" in model_family.lower():
-        engine, registry = create_nlp_engine_with_gliner(model_path)
+        engine, registry = create_nlp_engine_with_gliner(model_path, run_entities)
     else:
         raise ValueError(f"Model family {model_family} not supported")
     
@@ -241,6 +243,7 @@ def analyzer_engine(
     model_path: str,
     ta_key: Optional[str] = None,
     ta_endpoint: Optional[str] = None,
+    run_entities: Optional[List[str]] = None,
 ) -> AnalyzerEngine:
     """Create the NLP Engine instance based on the requested model.
     :param model_family: Which model package to use for NER.
@@ -252,7 +255,7 @@ def analyzer_engine(
     :param ta_endpoint: Endpoint of the Text Analytics instance (only if model_path = "Azure Text Analytics")
     """
     nlp_engine, registry = nlp_engine_and_registry(
-        model_family, model_path, ta_key, ta_endpoint
+        model_family, model_path, ta_key, ta_endpoint, run_entities=run_entities
     )
     analyzer = AnalyzerEngine(nlp_engine=nlp_engine, registry=registry)
     natasha_recognizer = NatashaSlovnetRecognizer()

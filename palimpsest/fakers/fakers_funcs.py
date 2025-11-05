@@ -5,7 +5,13 @@ from faker import Faker
 
 from .faker_utils import validate_name
 
-fake = Faker(locale="ru-RU")
+fake = None
+
+def fake_factory(locale: str = "ru-RU")-> Faker:
+    global fake
+    if fake is None:
+        fake = Faker(locale=locale)
+    return fake
 
 faked_values = {}
 true_values = {}
