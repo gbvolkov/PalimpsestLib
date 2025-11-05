@@ -42,7 +42,7 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
     tokenizer =  AutoTokenizer.from_pretrained("gliner-community/gliner_large-v2.5")
     calc_len = _length_factory(tokenizer)
     supported = analyzer.get_supported_entities() + RU_ENTITIES
-    supported.remove("IN_PAN")
+    if "IN_PAN" in supported: supported.remove("IN_PAN")
     engine = AnonymizerEngine()
     cr_key = CRYPRO_KEY
     _ctx = ctx
