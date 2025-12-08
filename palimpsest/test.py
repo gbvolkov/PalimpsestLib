@@ -2,10 +2,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 import pymorphy3
-from .names_morph import get_morphs
+from fakers.names_morph import get_morphs
+from fakers.fakers_funcs import fake_phone as _base_fake_phone, fake_factory as _fake_factory
+from rapidfuzz import fuzz, process
 
 _nlp = None  # spaCy model, loaded once
 _morph = pymorphy3.MorphAnalyzer(lang='ru')
+_true: dict[str, dict] = {}
+_faked: dict[str, dict] = {}
+_phone_cache: dict[str, str] = {}
 
 def get_nlp():
     """Lazily load and return the shared spaCy Russian pipeline."""
@@ -20,7 +25,9 @@ def normalize_phone(raw: str, default_country: str = "99", default_city: str = "
     """
     Normalize phone to digits-only form.
     - Strip leading zeroes from every part (country, city, local) before padding.
-    - Country: 2 digits; city: 3 digits; local: 7 digits.
+    - Country code is always 2 digits (left-padded with zero if needed after stripping).
+    - City code is always 3 digits (left-padded with zero if needed after stripping).
+    - Local part kept at 7 digits (rightmost digits, left-padded with zero if too short).
     """
     digits_all = "".join(ch for ch in raw if ch.isdigit())
     if not digits_all:
@@ -28,6 +35,7 @@ def normalize_phone(raw: str, default_country: str = "99", default_city: str = "
         city_core = default_city.lstrip("0") or "0"
         local_core = ""
     else:
+        # Extract parts from formatted input if possible
         before_paren = raw.split("(", 1)[0]
         country_part = "".join(ch for ch in before_paren if ch.isdigit())
 
@@ -42,6 +50,7 @@ def normalize_phone(raw: str, default_country: str = "99", default_city: str = "
         tail_digits = "".join(ch for ch in tail if ch.isdigit())
         local_raw = (tail_digits or digits_all)[-7:]
 
+        # Fallback city from remaining prefix if not taken from parentheses
         if not city_raw:
             prefix_full = digits_all[:-7]
             if country_part and prefix_full.startswith(country_part):
@@ -60,6 +69,47 @@ def normalize_phone(raw: str, default_country: str = "99", default_city: str = "
     local = local_core.zfill(7)
 
     return f"{country}{city}{local}"
+
+def fake_phone(value: str) -> str:
+    """
+    Phone-specific anonymizer: direct lookup by phone_hash (normalized), no fuzzy.
+    """
+    if value == "PII":
+        return value
+
+    _fake_factory()  # ensure faker is initialized
+    h = phone_hash(value)
+    if h in _true:
+        return _true[h]["fake"]
+
+    fake_val = _base_fake_phone(value)
+    _true[h] = {"true": value, "fake": fake_val}
+    _faked[phone_hash(fake_val)] = {"true": value, "fake": fake_val}
+
+    return fake_val
+
+def defake_phone(value: str) -> str:
+    """
+    Phone-specific exact defake: direct lookup by phone_hash (no fuzzy).
+    """
+    if value == "PII":
+        return value
+    h = phone_hash(value)
+    if h in _faked:
+        return _faked[h].get("true")
+    return value
+
+def defake_phone_fuzzy(value: str):
+    """
+    Phone-specific fuzzy defake: now delegates to exact lookup.
+    """
+    return defake_phone(value)
+
+def phone_hash(value: str) -> str:
+    """
+    Phone hash: normalized phone string (digits-only with padding rules).
+    """
+    return normalize_phone(value)
 
 def calc_hash(text):
     VOWELS = set("АЕЁИОУЫЭЮЯаеёиоуыэюя")
@@ -105,3 +155,11 @@ def validate_name(name):
 
 def validate_name_cusom(name):
     return True
+
+
+
+if __name__ == "__main__":
+    src = "99923420392020900087-64-05"
+    norm = fake_phone(src)
+    print("normalized:", norm)
+    print("restored  :", defake_phone(norm))

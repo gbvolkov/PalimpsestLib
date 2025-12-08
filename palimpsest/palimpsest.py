@@ -79,7 +79,7 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
         "PERSON": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
         "RU_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
         "CREDIT_CARD": OperatorConfig("custom", {"lambda": _ctx.defake}),
-        "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
+        "PHONE_NUMBER": OperatorConfig("custom", {"lambda": _ctx.defake_phone}),
         "IP_ADDRESS": OperatorConfig("custom", {"lambda": _ctx.defake}),
         "URL": OperatorConfig("custom", {"lambda": _ctx.defake_fuzzy}),
         "RU_PASSPORT": OperatorConfig("custom", {"lambda": _ctx.defake}),
