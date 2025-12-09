@@ -28,6 +28,7 @@ class UnifiedAddress:
 
 
 def unify_address(raw: str) -> UnifiedAddress:
+
     # 1. pre-clean whitespace
     raw = " ".join(raw.strip().split())
 

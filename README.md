@@ -9,14 +9,17 @@ Palimpsest is a Python library, based on presidio framework, designed for revers
 
 ## Installation
 
-You can install Palimsest directly from PyPI once it is published:
+- Python 3.13 is required.
+- On Windows x86_64, a prebuilt `postal` wheel with bundled libpostal is pulled automatically.
+- On other platforms, install libpostal system libraries first, then `pip install postal`.
+
+Install from the repo:
 
 ```bash
-
-pip install palimpsest@git+https://github.com/gbvolkov/PalimpsestLib.git
+pip install "palimpsest @ git+https://github.com/gbvolkov/PalimpsestLib.git"
 ```
 
-If you are installing from source (assuming you have the `pyproject.toml` file in the root directory):
+If installing from a local checkout:
 
 ```bash
 cd PalimpsestLib
