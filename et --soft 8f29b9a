@@ -1,0 +1,42 @@
+[33me80e84a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m 1
+[33m165edde[m Enhance address handling: Introduce fuzzy key storage and improve defake functionality
+[33m8f29b9a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update installation instructions and dependencies; bump version to 0.1.29
+[33mc3066f7[m next version
+[33m987469f[m address fuzzy hash is introduced
+[33m4a0b048[m Add phone normalization and defake functionality; update version to 0.1.27
+[33md42b168[m Refactor code structure for improved readability and maintainability
+[33mbed7fb7[m New version 0.1.26
+[33mb387eed[m locale is introduced to support english
+[33m4ded50d[m Fixed bug
+[33m7ed6e0e[m 1
+[33ma46b334[m 1
+[33m10fd85d[m 1
+[33m49d5640[m tiIL SD ticket recogniser added
+[33m8931444[m Added parameter to limit entities to be processed
+[33m78e8217[m email fixed
+[33ma403c01[m email added
+[33m97b126a[m Natasha will be used for RU_PERSON insted of Glide
+[33m52f9ef2[m cuda support for Gliner
+[33m7df64aa[m splitting improvement
+[33m8bd5a08[m 1
+[33m98dac47[m debug output corrected. New complex test added
+[33m208341a[m 1
+[33mbd92626[m Reset context added to Palimpsest . Addeed some tests
+[33macd6562[m Insignificat changes
+[33m3145497[m Ready
+[33m412abc5[m 1
+[33m3f8bcad[m 1
+[33m1eac613[m 1
+[33m8dc40b0[m 1
+[33mae54433[m 1
+[33ma124240[m 1
+[33m211591c[m 1
+[33m12176a4[m 1
+[33m972c347[m 1
+[33mc28cf30[m 1
+[33m0a2f85b[m 1
+[33md471056[m 1
+[33m6248c13[m 1
+[33m7f735c2[m 1
+[33meda9ce0[m README updated
+[33me518189[m First commit
