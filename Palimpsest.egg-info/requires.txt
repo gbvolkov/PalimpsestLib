@@ -12,3 +12,4 @@ faker
 rapidfuzz
 petrovna
 pytrovich
+postal

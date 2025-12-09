@@ -34,13 +34,17 @@ dependencies = [
     "faker",
     "rapidfuzz",
     "petrovna",
-    "pytrovich"
+    "pytrovich",
+    "postal",
 ]
 
 # Tell setuptools to only auto-discover palimpsest/* and skip sample/*
 [tool.setuptools.packages.find]
 include = ["palimpsest*"]
 exclude = ["sample*", "tests*"]
+
+[tool.uv.sources]
+postal = { path = "wheels/postal-1.1.11-cp313-cp313-win_amd64.whl" }
 
 # Define URLs as a separate table under [project]
 [project.urls]

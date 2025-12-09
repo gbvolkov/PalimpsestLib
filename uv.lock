@@ -1454,7 +1454,7 @@ wheels = [
 
 [[package]]
 name = "palimpsest"
-version = "0.1.26"
+version = "0.1.27"
 source = { editable = "." }
 dependencies = [
     { name = "faker" },
@@ -1463,6 +1463,7 @@ dependencies = [
     { name = "natasha" },
     { name = "nltk" },
     { name = "petrovna" },
+    { name = "postal" },
     { name = "presidio-analyzer", extra = ["transformers"] },
     { name = "presidio-anonymizer" },
     { name = "pymorphy3" },
@@ -1481,6 +1482,7 @@ requires-dist = [
     { name = "natasha" },
     { name = "nltk" },
     { name = "petrovna" },
+    { name = "postal", path = "wheels/postal-1.1.11-cp313-cp313-win_amd64.whl" },
     { name = "presidio-analyzer", extras = ["transformers"] },
     { name = "presidio-anonymizer" },
     { name = "pymorphy3" },
@@ -1574,6 +1576,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/35/73/e29aa0c9c666cf787628d3f0dcf379f4791fba79f4936d02f8b37165bdf8/pillow-12.0.0-cp314-cp314t-win_amd64.whl", hash = "sha256:905b0365b210c73afb0ebe9101a32572152dfd1c144c7e28968a331b9217b94a", size = 7148282, upload-time = "2025-10-15T18:23:55.316Z" },
     { url = "https://files.pythonhosted.org/packages/c1/70/6b41bdcddf541b437bbb9f47f94d2db5d9ddef6c37ccab8c9107743748a4/pillow-12.0.0-cp314-cp314t-win_arm64.whl", hash = "sha256:99353a06902c2e43b43e8ff74ee65a7d90307d82370604746738a1e0661ccca7", size = 2525630, upload-time = "2025-10-15T18:23:57.149Z" },
 ]
+
+[[package]]
+name = "postal"
+version = "1.1.11"
+source = { path = "wheels/postal-1.1.11-cp313-cp313-win_amd64.whl" }
+dependencies = [
+    { name = "six" },
+]
+wheels = [
+    { filename = "postal-1.1.11-cp313-cp313-win_amd64.whl", hash = "sha256:c09a9757a39460353f93b81af98d015eef8f85ddc9435b9fa7e1c366d3eb1d20" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "six" }]
 
 [[package]]
 name = "pptree"

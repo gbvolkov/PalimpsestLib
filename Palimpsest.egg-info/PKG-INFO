@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: Palimpsest
-Version: 0.1.26
+Version: 0.1.27
 Summary: Anonimizes and Deanonimizes data.
 Author-email: Georgy Volkov <gbvolkov@gmail.com>
 License: MIT License
@@ -48,6 +48,7 @@ Requires-Dist: faker
 Requires-Dist: rapidfuzz
 Requires-Dist: petrovna
 Requires-Dist: pytrovich
+Requires-Dist: postal
 Dynamic: license-file
 
 ```markdown

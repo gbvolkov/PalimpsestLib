@@ -13,6 +13,8 @@ palimpsest/analyzer_engine_provider.py
 palimpsest/config.py
 palimpsest/logger_factory.py
 palimpsest/palimpsest.py
+palimpsest/test.py
+palimpsest/test2.py
 palimpsest/fakers/__init__.py
 palimpsest/fakers/faker_context.py
 palimpsest/fakers/faker_utils.py

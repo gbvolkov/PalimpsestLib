@@ -9,6 +9,8 @@ from rapidfuzz import fuzz, process
 from .faker_utils import calc_hash, normalize_phone
 from .fakers_funcs import fake_factory
 
+from utils.addr_unifier import unify_address
+
 class FakerContext:
     """
     A context that finds every function named fake_* in the fakers module
@@ -27,18 +29,25 @@ class FakerContext:
 
         # wrap & bind every fake_* as an instance method
         phone_func = None
+        address_func = None
         for name, func in inspect.getmembers(module, inspect.isfunction):
             if name == "fake_phone":
                 phone_func = func
+                continue
+            if name == "fake_house":
+                address_func = func
                 continue
             if name.startswith("fake_"):
                 setattr(self, name, self._wrap(func))
         if phone_func:
             setattr(self, "fake_phone", self._wrap_phone(phone_func))
+        if address_func:
+            setattr(self, "fake_house", self._wrap_address(address_func))
 
         # bind defake
         setattr(self, "defake", self.defake)
         setattr(self, "defake_phone", self.defake_phone)
+        setattr(self, "defake_address", self.defake_address)
     
     def reset(self):
         self._true: dict[str, dict] = {}
@@ -89,6 +98,29 @@ class FakerContext:
     
     def phone_hash(self, value: str) -> str:
         return normalize_phone(value)
+
+    def _wrap_address(self, func):
+        """Address-specific wrapper: direct hash by address_hash (passthrough for now)."""
+        @functools.wraps(func)
+        def wrapper(value: str) -> str:
+            if value == "PII":
+                return value
+
+            h = self.address_hash(value)
+            if h in self._true:
+                return self._true[h]["fake"]
+
+            fake_val = func(value)
+
+            self._true[h] = {"true": value, "fake": fake_val}
+            self._faked[self.address_hash(fake_val)] = {"true": value, "fake": fake_val}
+
+            return fake_val
+        return wrapper
+
+    def address_hash(self, value: str) -> str:
+        unified_addr = unify_address(value)
+        return unified_addr.fuzzy_hash
     
     def defake(self, fake):
         if fake == 'PII':
@@ -105,6 +137,14 @@ class FakerContext:
         if fake == 'PII':
             return fake
         h = self.phone_hash(fake)
+        if h in self._faked:
+            return self._faked[h].get('true')
+        return fake
+
+    def defake_address(self, fake):
+        if fake == 'PII':
+            return fake
+        h = self.address_hash(fake)
         if h in self._faked:
             return self._faked[h].get('true')
         return fake
