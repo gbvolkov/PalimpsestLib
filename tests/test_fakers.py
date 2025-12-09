@@ -46,14 +46,14 @@ def test_independent_contexts():
 
     defake1_name = ctx1.defake_fuzzy(fake1_name)
     defake1_inn = ctx1.defake(fake1_inn)
-    defake1_address = ctx1.defake_fuzzy(fake1_address)
+    defake1_address = ctx1.defake_address(fake1_address)
 
     defake2_name = ctx2.defake_fuzzy(fake2_name)
     defake2_inn = ctx2.defake(fake2_inn)
-    defake2_address = ctx2.defake_fuzzy(fake2_address)
+    defake2_address = ctx2.defake_address(fake2_address)
 
     wrong_defake_name_1 = ctx2.defake_fuzzy(fake1_name)
-    wrong_defake_address_1 = ctx2.defake_fuzzy(fake1_address)
+    wrong_defake_address_1 = ctx2.defake_address(fake1_address)
     wrong_defake_inn_1 = ctx2.defake(fake1_inn)
 
     assert defake1_name != real_name_1 or defake1_inn or real_inn_1 or defake1_address or real_address_1 or defake2_name != real_name_2 or defake2_inn or real_inn_2 or defake2_address or real_address_2, "Defake failed!"

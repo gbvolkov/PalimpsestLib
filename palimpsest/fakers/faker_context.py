@@ -9,7 +9,7 @@ from rapidfuzz import fuzz, process
 from .faker_utils import calc_hash, normalize_phone
 from .fakers_funcs import fake_factory
 
-from utils.addr_unifier import unify_address
+from ..utils.addr_unifier import unify_address
 
 class FakerContext:
     """
@@ -100,27 +100,37 @@ class FakerContext:
         return normalize_phone(value)
 
     def _wrap_address(self, func):
-        """Address-specific wrapper: direct hash by address_hash (passthrough for now)."""
+        """Address-specific wrapper: store hashes and fuzzy keys for reverse lookup."""
         @functools.wraps(func)
         def wrapper(value: str) -> str:
             if value == "PII":
                 return value
-
             h = self.address_hash(value)
             if h in self._true:
                 return self._true[h]["fake"]
 
             fake_val = func(value)
 
-            self._true[h] = {"true": value, "fake": fake_val}
-            self._faked[self.address_hash(fake_val)] = {"true": value, "fake": fake_val}
-
+            self._true[h] = {
+                "true": value,
+                "fake": fake_val,
+                "fuzzy_key": self.address_fuzzy_key(value),
+            }
+            self._faked[self.address_hash(fake_val)] = {
+                "true": value,
+                "fake": fake_val,
+                "fuzzy_key": self.address_fuzzy_key(fake_val),
+            }
             return fake_val
         return wrapper
 
     def address_hash(self, value: str) -> str:
         unified_addr = unify_address(value)
         return unified_addr.fuzzy_hash
+
+    def address_fuzzy_key(self, value: str) -> str:
+        unified_addr = unify_address(value)
+        return "\n".join(sorted(unified_addr.fuzzy_keys))
     
     def defake(self, fake):
         if fake == 'PII':
@@ -147,6 +157,15 @@ class FakerContext:
         h = self.address_hash(fake)
         if h in self._faked:
             return self._faked[h].get('true')
+        # fallback: fuzzy match on concatenated expanded variants
+        items = list(self._faked.items())
+        if not items:
+            return fake
+        fuzzy_key = self.address_fuzzy_key(fake)
+        stored_keys = [entry.get("fuzzy_key", "") for _, entry in items]
+        best = process.extractOne(fuzzy_key, stored_keys, scorer=fuzz.partial_ratio, score_cutoff=60)
+        if best:
+            return items[best[2]][1].get("true", fake)
         return fake
 
     def defake_fuzzy(self, fake):

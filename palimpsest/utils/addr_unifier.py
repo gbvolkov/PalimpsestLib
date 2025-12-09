@@ -4,7 +4,11 @@ import hashlib
 
 from postal.parser import parse_address
 from postal.normalize import normalize_string
-from postal.expand import expand_address
+from postal.expand import (
+    expand_address,
+    ADDRESS_ALL,
+    ADDRESS_ANY
+)
 
 # Order matters: this defines your canonical layout
 CANON_ORDER = [
@@ -53,7 +57,16 @@ def unify_address(raw: str) -> UnifiedAddress:
     canonical_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
     # 6. fuzzy variants via expand_address (optional but useful)
-    fuzzy_keys = set(expand_address(raw))  # can be large for some inputs
+    fuzzy_keys = set(expand_address(
+        raw, 
+        decompose = True, 
+        lowercase = True, 
+        split_alpha_from_numeric = True, 
+        expand_numex = True, 
+        roman_numerals = True, 
+        delete_apostrophes = True,
+        address_components = ADDRESS_ALL
+    ))  # can be large for some inputs
 
     # sort to get deterministic representation before hashing
     fuzzy_str = "\n".join(sorted(fuzzy_keys))
