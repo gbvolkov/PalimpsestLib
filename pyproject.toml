@@ -36,7 +36,7 @@ dependencies = [
     "petrovna",
     "pytrovich",
     # Prebuilt wheel with bundled libpostal for Windows x86_64 + CPython 3.13
-    "postal @ https://raw.githubusercontent.com/gbvolkov/PalimpsestLib/main/wheels/postal-1.1.11-cp313-cp313-win_amd64.whl; platform_system == \"Windows\" and platform_machine == \"AMD64\" and python_version >= \"3.13\" and python_version < \"3.14\"",
+    "postal @ https://raw.githubusercontent.com/gbvolkov/PalimpsestLib/main/wheels/postal-1.1.11-cp313-cp313-win_amd64.whl ; platform_system == \"Windows\" and platform_machine == \"AMD64\" and python_version >= \"3.13\" and python_version < \"3.14\"",
 ]
 
 # Tell setuptools to only auto-discover palimpsest/* and skip sample/*
