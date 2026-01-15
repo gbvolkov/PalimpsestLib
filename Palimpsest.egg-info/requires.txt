@@ -13,5 +13,8 @@ rapidfuzz
 petrovna
 pytrovich
 
-[:platform_system == "Windows" and platform_machine == "AMD64" and python_version >= "3.13" and python_version < "3.14"]
+[:sys_platform == "linux"]
+pypostal-multiarch
+
+[:sys_platform == "win32" and platform_machine == "AMD64" and python_version >= "3.13" and python_version < "3.14"]
 postal@ https://raw.githubusercontent.com/gbvolkov/PalimpsestLib/main/wheels/postal-1.1.11-cp313-cp313-win_amd64.whl

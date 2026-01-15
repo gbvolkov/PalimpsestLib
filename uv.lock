@@ -1319,7 +1319,7 @@ wheels = [
 
 [[package]]
 name = "palimpsest"
-version = "0.1.31"
+version = "0.1.33"
 source = { editable = "." }
 dependencies = [
     { name = "faker" },
@@ -1333,6 +1333,7 @@ dependencies = [
     { name = "presidio-anonymizer" },
     { name = "pymorphy3" },
     { name = "pymorphy3-dicts-ru" },
+    { name = "pypostal-multiarch", marker = "sys_platform == 'linux'" },
     { name = "python-dotenv" },
     { name = "pytrovich" },
     { name = "rapidfuzz" },
@@ -1352,6 +1353,7 @@ requires-dist = [
     { name = "presidio-anonymizer" },
     { name = "pymorphy3" },
     { name = "pymorphy3-dicts-ru" },
+    { name = "pypostal-multiarch", marker = "sys_platform == 'linux'" },
     { name = "python-dotenv" },
     { name = "pytrovich" },
     { name = "rapidfuzz" },
@@ -1695,6 +1697,15 @@ sdist = { url = "https://files.pythonhosted.org/packages/33/c1/1d9de9aeaa1b89b01
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8b/40/2614036cdd416452f5bf98ec037f38a1afb17f327cb8e6b652d4729e0af8/pyparsing-3.3.1-py3-none-any.whl", hash = "sha256:023b5e7e5520ad96642e2c6db4cb683d3970bd640cdf7115049a6e9c3682df82", size = 121793, upload-time = "2025-12-23T03:14:02.103Z" },
 ]
+
+[[package]]
+name = "pypostal-multiarch"
+version = "1.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/df/93/2b448eb06a7d989a5802558a0aa05b757b787cddf7c2926354457185b188/pypostal_multiarch-1.0.3.tar.gz", hash = "sha256:53de9a62015481a08b63332521554153c1b8b1730bcf54c575f1db5a3756e8c3", size = 38256, upload-time = "2025-08-15T01:07:46.199Z" }
 
 [[package]]
 name = "pyreadline3"

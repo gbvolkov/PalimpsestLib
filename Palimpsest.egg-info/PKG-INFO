@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: Palimpsest
-Version: 0.1.31
+Version: 0.1.33
 Summary: Anonimizes and Deanonimizes data.
 Author-email: Georgy Volkov <gbvolkov@gmail.com>
 License: MIT License
@@ -48,7 +48,8 @@ Requires-Dist: faker
 Requires-Dist: rapidfuzz
 Requires-Dist: petrovna
 Requires-Dist: pytrovich
-Requires-Dist: postal@ https://raw.githubusercontent.com/gbvolkov/PalimpsestLib/main/wheels/postal-1.1.11-cp313-cp313-win_amd64.whl ; platform_system == "Windows" and platform_machine == "AMD64" and python_version >= "3.13" and python_version < "3.14"
+Requires-Dist: pypostal-multiarch; sys_platform == "linux"
+Requires-Dist: postal@ https://raw.githubusercontent.com/gbvolkov/PalimpsestLib/main/wheels/postal-1.1.11-cp313-cp313-win_amd64.whl ; sys_platform == "win32" and platform_machine == "AMD64" and python_version >= "3.13" and python_version < "3.14"
 Dynamic: license-file
 
 ```markdown
