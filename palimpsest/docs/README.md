@@ -8,6 +8,8 @@ Start here for future Codex or agent work:
   diagnostic information for exceptions.
 - `codebase_review_findings.md` records current risks and recommended fixes that
   future changes should preserve or address.
+- `current_codebase_review_findings.md` records the latest careful review of the
+  current workspace after session isolation and phone faker changes.
 
 The governing rule for this library is:
 

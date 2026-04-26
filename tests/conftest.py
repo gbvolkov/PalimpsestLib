@@ -21,8 +21,8 @@ SAMPLE_TEXT = (
     f"Call {SAMPLE_PHONE}."
 )
 SAMPLE_RU_TEXT = (
-    "\u041a\u043b\u0438\u0435\u043d\u0442 \u0418\u0432\u0430\u043d "
-    "\u0418\u0432\u0430\u043d\u043e\u0432, \u0442\u0435\u043b\u0435\u0444\u043e\u043d "
+    "Клиент Иван "
+    "Иванов, телефон "
     "+7 (495) 123-45-67."
 )
 
@@ -95,6 +95,8 @@ def lightweight_palimpsest_factory(monkeypatch):
             assert isinstance(deanon_calls, list)
             deanon_calls.append((text, tuple(entries)))
             matches = [entry for entry in entries if entry.text in text]
+            if not matches:
+                return text, [], text, []
             if len(matches) != 1:
                 raise LookupError("mapping/session mismatch")
             return text.replace(matches[0].text, matches[0].restored), [], text, []

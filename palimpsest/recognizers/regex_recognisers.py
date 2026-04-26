@@ -246,8 +246,16 @@ class RUCreditCardRecognizer(EntityRecognizer):
             #supported_language=["ru", "en"],
             name="CommonCreditCardRecognizer",
         )
-        # match formats like 123-456-789 00 or 12345678900
-        self.pattern = re.compile(r"\b(\d(?:[ .-]?\d){12})\b|\b(\d(?:[ .-]?\d){14})\b|\b(\d(?:[ .-]?\d){15})\b|\b(\d(?:[ .-]?\d){17})\b|\b(\d(?:[ .-]?\d){18})\b")
+        # Match supported card lengths, including Maestro 12 and Diners Club 14.
+        self.pattern = re.compile(
+            r"\b\d(?:[ .-]?\d){11}\b|"
+            r"\b\d(?:[ .-]?\d){12}\b|"
+            r"\b\d(?:[ .-]?\d){13}\b|"
+            r"\b\d(?:[ .-]?\d){14}\b|"
+            r"\b\d(?:[ .-]?\d){15}\b|"
+            r"\b\d(?:[ .-]?\d){17}\b|"
+            r"\b\d(?:[ .-]?\d){18}\b"
+        )
 
     def analyze(self, text: str, entities=None, **kwargs):
         #self.pattern = re.compile(r"\b\d{3}-?\d{3}-?\d{3}[- ]?\d{2}\b")

@@ -242,10 +242,6 @@ class PalimpsestSession:
     def deanonymize(self, anonymized_text: str = None) -> str:
         with self._lock:
             self._ensure_open()
-            if not self._anon_entries_by_text:
-                raise SessionStateError(
-                    f"Palimpsest session has no anonymization mapping: {self.session_id!r}"
-                )
             if anonymized_text is None:
                 anonymized_text = self._anonimized_text
             return self._processor._deanonymize_session(self, anonymized_text)

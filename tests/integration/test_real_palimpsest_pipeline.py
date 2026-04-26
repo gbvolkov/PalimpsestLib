@@ -66,8 +66,8 @@ def test_real_pipeline_anonymizes_and_restores_representative_russian_text():
     anonymized = session.anonimize(SAMPLE_RU_TEXT)
     restored = session.deanonimize(anonymized)
 
-    assert "\u0418\u0432\u0430\u043d \u0418\u0432\u0430\u043d\u043e\u0432" not in anonymized
-    assert "\u0418\u0432\u0430\u043d \u0418\u0432\u0430\u043d\u043e\u0432" in restored
+    assert "Иван Иванов" not in anonymized
+    assert "Иван Иванов" in restored
 
 
 def test_missing_gliner_model_rethrows_original_dependency_exception():

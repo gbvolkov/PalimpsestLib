@@ -90,7 +90,7 @@ def fake_phone(x):
     return fake.phone_number()
 
 def fake_card(x):
-    return fake.credit_card_number()
+    return fake.credit_card_number(card_type="visa16")
 
 def fake_ip(x):
     return fake.ipv4_public()

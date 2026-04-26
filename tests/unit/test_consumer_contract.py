@@ -93,7 +93,7 @@ def test_consumer_contract_requires_tool_outputs_to_use_same_anonymizer():
     assert protected_output == "ANON::1"
 
 
-def test_long_lived_shared_palimpsest_must_not_restore_with_stale_mapping(
+def test_long_lived_shared_palimpsest_returns_unmatched_foreign_mapping_unchanged(
     lightweight_palimpsest_factory,
 ):
     from palimpsest import Palimpsest
@@ -105,9 +105,7 @@ def test_long_lived_shared_palimpsest_must_not_restore_with_stale_mapping(
     user_one_fake = user_one.anonimize("user-one secret")
     user_two.anonimize("user-two secret")
 
-    with pytest.raises(Exception):
-        user_two.deanonimize(user_one_fake)
-
+    assert user_two.deanonimize(user_one_fake) == user_one_fake
     assert user_one.deanonimize(user_one_fake) == "user-one secret"
 
 

@@ -77,14 +77,15 @@ def test_unsupported_input_raises_instead_of_returning_original(
         session.anonimize(None)
 
 
-def test_deanonimize_before_session_mapping_raises(lightweight_palimpsest_factory):
-    from palimpsest import Palimpsest, SessionStateError
+def test_deanonimize_without_session_mapping_returns_input_unchanged(
+    lightweight_palimpsest_factory,
+):
+    from palimpsest import Palimpsest
 
     processor = Palimpsest()
     session = processor.create_session(session_id="empty")
 
-    with pytest.raises(SessionStateError):
-        session.deanonimize("FAKE_VALUE_1")
+    assert session.deanonimize("FAKE_VALUE_1") == "FAKE_VALUE_1"
 
 
 def test_session_reset_and_close_enforce_lifetime(lightweight_palimpsest_factory):
@@ -95,8 +96,7 @@ def test_session_reset_and_close_enforce_lifetime(lightweight_palimpsest_factory
     anonymized = session.anonymize("secret")
 
     session.reset()
-    with pytest.raises(SessionStateError):
-        session.deanonymize(anonymized)
+    assert session.deanonymize(anonymized) == anonymized
 
     session.close()
     with pytest.raises(SessionStateError):

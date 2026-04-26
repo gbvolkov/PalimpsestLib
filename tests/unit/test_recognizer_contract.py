@@ -112,6 +112,28 @@ def test_valid_structured_identifiers_return_type_score_and_span(
     assert text[result.start : result.end] == expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Maestro payment card 675944116713 is on file.", "675944116713"),
+        ("Diners payment card 30569309025904 is on file.", "30569309025904"),
+    ],
+)
+def test_credit_card_recognizer_supports_maestro_and_diners_lengths(
+    text,
+    expected,
+):
+    from palimpsest.recognizers.regex_recognisers import RUCreditCardRecognizer
+
+    recognizer = RUCreditCardRecognizer()
+    results = recognizer.analyze(text, entities=["CREDIT_CARD"])
+
+    assert len(results) == 1
+    assert results[0].entity_type == "CREDIT_CARD"
+    assert results[0].score >= 0.99
+    assert text[results[0].start : results[0].end] == expected
+
+
 def test_recognizer_entity_allow_list_excludes_unrequested_entities():
     from palimpsest.recognizers.regex_recognisers import SNILSRecognizer
 

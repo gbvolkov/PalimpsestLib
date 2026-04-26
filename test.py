@@ -34,17 +34,17 @@ llm = ChatYandexGPT(
 
 anon_entities = [
     "RU_PERSON"
-    #,"RU_ADDRESS"
+    ,"RU_ADDRESS"
     ,"PERSON"
-    #,"CREDIT_CARD"
-    #,"PHONE_NUMBER"
-    #,"IP_ADDRESS"
-    #,"URL"
-    #,"RU_PASSPORT"
-    #,"SNILS"
-    #,"INN"
-    #,"RU_BANK_ACC"
-    #,"TICKET_NUMBER"
+    ,"CREDIT_CARD"
+    ,"PHONE_NUMBER"
+    ,"IP_ADDRESS"
+    ,"URL"
+    ,"RU_PASSPORT"
+    ,"SNILS"
+    ,"INN"
+    ,"RU_BANK_ACC"
+    ,"TICKET_NUMBER"
 ]
 
 processor = Palimpsest(verbose=True, run_entities=anon_entities, locale="en-US")
@@ -150,10 +150,9 @@ def get_llm_parameters(provider: str) -> Dict[str, str]:
     return defaults.get(provider, {}) if provider else defaults
 
 if __name__ == "__main__":
-    import palimpsest.config as config
     
     text = """Client John Doe (4519227557), on behalf of William Scheffler (4519227557), contacted “Interleasing” with a proposal to buy a tractor.
-Payment will be made using his card 4095260993934932.
+Payment will be made using his card 4095260993934932 or his Maestro card 675944116713.
 Call him at 986-777-7777 or 985-777-7237.
 Or visit him at London, City, str Queen Elisabeth, building 1/2, apt. 17.
 You can view his data at https://client.ileasing.com/name=doe:3000
