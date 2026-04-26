@@ -85,6 +85,8 @@ def fake_email(x):
     return fake.safe_email()
 
 def fake_phone(x):
+    if hasattr(fake, "basic_phone_number"):
+        return fake.basic_phone_number()
     return fake.phone_number()
 
 def fake_card(x):

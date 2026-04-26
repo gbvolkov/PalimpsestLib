@@ -34,27 +34,27 @@ llm = ChatYandexGPT(
 
 anon_entities = [
     "RU_PERSON"
-    ,"RU_ADDRESS"
+    #,"RU_ADDRESS"
     ,"PERSON"
-    ,"CREDIT_CARD"
-    ,"PHONE_NUMBER"
-    ,"IP_ADDRESS"
-    ,"URL"
-    ,"RU_PASSPORT"
-    ,"SNILS"
-    ,"INN"
-    ,"RU_BANK_ACC"
-    ,"TICKET_NUMBER"
+    #,"CREDIT_CARD"
+    #,"PHONE_NUMBER"
+    #,"IP_ADDRESS"
+    #,"URL"
+    #,"RU_PASSPORT"
+    #,"SNILS"
+    #,"INN"
+    #,"RU_BANK_ACC"
+    #,"TICKET_NUMBER"
 ]
 
 processor = Palimpsest(verbose=True, run_entities=anon_entities, locale="en-US")
 
-def anonymize(text: str, language = "en") -> str:
-    resulting_text = processor.anonimize(text)
+def anonymize(text: str, session, language = "en") -> str:
+    resulting_text = session.anonimize(text)
     return resulting_text
 
-def deanonymize(text: str, language = "en") -> str:
-    resulting_text = processor.deanonimize(text)
+def deanonymize(text: str, session, language = "en") -> str:
+    resulting_text = session.deanonimize(text)
     return resulting_text
 
 
@@ -99,14 +99,18 @@ def generate_answer(system_prompt: str, user_request: str, llm_provider: str = "
             ("user", "{user_request}"),
         ]
     )
-    processor.reset_context()
-    anonymized_request = anonymize(user_request, language="en")
+    print(f"Original request: {user_request}\n\n")
+    session = processor.create_session()
+    anonymized_request = anonymize(user_request, session=session, language="en")
+    print(f"Anonymized request: {anonymized_request}\n\n")
     llm = make_llm(llm_provider, llm_parameters)
     chain = prompt | llm
-    #chain = {"user_request": lambda txt: anonymize(txt, language="en")} | prompt | llm | (lambda ai_message: deanonymize(ai_message.content))
+    #chain = {"user_request": lambda txt: anonymize(txt, session=session, language="en")} | prompt | llm | (lambda ai_message: deanonymize(ai_message.content, session=session))
     response = chain.invoke(anonymized_request)
     llm_answer = response.content
-    deanonymized_answer = deanonymize(llm_answer)
+    print(f"LLM answer: {llm_answer}\n\n")
+    deanonymized_answer = deanonymize(llm_answer, session=session)
+    print(f"Deanonymized answer: {deanonymized_answer}\n===============================\n\n")
     return deanonymized_answer, anonymized_request, llm_answer
 
 def get_llm_parameters(provider: str) -> Dict[str, str]:

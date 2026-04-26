@@ -47,11 +47,13 @@ text = """Клиент Степан Степанов (паспорт 4519345678)
 system_prompt = """Преобразуй текст в записку для записи в CRM. Текст должен быть хорошо структурирован и понятен с первого взгляда"""
 
 processor = Palimpsest()
-anon = processor.anonimize(text)
+session = processor.create_session(session_id="crm-request-1")
+
+anon = session.anonimize(text)
 
 answer = generate_answer(system_prompt, anon)
 
-deanon = processor.deanonimize(answer)
+deanon = session.deanonimize(answer)
 
 ```
 
