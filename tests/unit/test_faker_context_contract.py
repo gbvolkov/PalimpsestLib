@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 import pytest
@@ -194,6 +195,49 @@ def test_address_fake_collision_regenerates_without_overwriting(
     assert second == "unique-address"
     assert ctx.defake_address("same-address") == "true-address-one"
     assert ctx.defake_address("unique-address") == "true-address-two"
+
+
+def test_ru_specific_fakers_use_ru_locale_with_en_default(monkeypatch):
+    import palimpsest.fakers.faker_context as context_module
+    from palimpsest.fakers.faker_context import FakerContext
+
+    monkeypatch.setattr(context_module, "fake_factory", lambda locale=None: None)
+    monkeypatch.setattr(context_module, "calc_hash", lambda value: value)
+    monkeypatch.setattr(FakerContext, "address_hash", lambda self, value: value)
+    monkeypatch.setattr(FakerContext, "address_fuzzy_key", lambda self, value: value)
+
+    def has_cyrillic(value: str) -> bool:
+        return any("А" <= char <= "я" or char in "Ёё" for char in value)
+
+    ctx = FakerContext(locale="en-US")
+
+    passport = ctx.fake_ru_passport("passport")
+    bank_account = ctx.fake_ru_bank_account("bank-account")
+    name = ctx.fake_ru_name("person")
+    address = ctx.fake_ru_address("address")
+
+    assert re.fullmatch(r"(\d{4} \d{6})|(\d{2} \d{2} \d{6})", passport)
+    assert re.fullmatch(r"\d{20}", bank_account)
+    assert has_cyrillic(name)
+    assert has_cyrillic(address)
+    assert ctx.defake(passport) == "passport"
+    assert ctx.defake(bank_account) == "bank-account"
+    assert ctx.defake_address(address) == "address"
+
+
+def test_ru_specific_fakers_do_not_break_default_card_faker():
+    from palimpsest.fakers import fakers_funcs
+
+    fakers_funcs.fake = None
+    fakers_funcs._fake_by_locale = {}
+    default_fake = fakers_funcs.fake_factory("en-US")
+
+    passport = fakers_funcs.fake_ru_passport("passport")
+    card = fakers_funcs.fake_card("card")
+
+    assert fakers_funcs.fake is default_fake
+    assert re.fullmatch(r"(\d{4} \d{6})|(\d{2} \d{2} \d{6})", passport)
+    assert re.fullmatch(r"\d{16}", card)
 
 
 def test_address_dependency_failure_rethrows_original_with_context_note(

@@ -66,7 +66,7 @@ class GlinerRecognizer(EntityRecognizer):
             supported_language="en",
             name="GlinerRecognizer",
         )
-        self._model = GLiNER.from_pretrained(model_path, local_files_only=True)
+        self._model = GLiNER.from_pretrained(model_path) #, local_files_only=True)
         # Move model to device explicitly
         try:
             self._model.to(device)

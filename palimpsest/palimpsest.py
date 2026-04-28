@@ -57,7 +57,8 @@ class _PalimpsestRuntime:
             run_entities=run_entities,
         )
         self._tokenizer = AutoTokenizer.from_pretrained(
-            "gliner-community/gliner_large-v2.5"
+            "gliner-community/gliner_large-v2.5"#,
+            #local_files_only=True,
         )
         self._calc_len = _length_factory(self._tokenizer)
         supported = self._analyzer.get_supported_entities() + RU_ENTITIES
@@ -83,10 +84,10 @@ class _PalimpsestRuntime:
             "IP_ADDRESS": OperatorConfig("custom", {"lambda": ctx.fake_ip}),
             "URL": OperatorConfig("custom", {"lambda": ctx.fake_url}),
             "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": ctx.fake_email}),
-            "RU_PASSPORT": OperatorConfig("custom", {"lambda": ctx.fake_passport}),
+            "RU_PASSPORT": OperatorConfig("custom", {"lambda": ctx.fake_ru_passport}),
             "SNILS": OperatorConfig("custom", {"lambda": ctx.fake_snils}),
             "INN": OperatorConfig("custom", {"lambda": ctx.fake_inn}),
-            "RU_BANK_ACC": OperatorConfig("custom", {"lambda": ctx.fake_account}),
+            "RU_BANK_ACC": OperatorConfig("custom", {"lambda": ctx.fake_ru_bank_account}),
             "Person": OperatorConfig("custom", {"lambda": ctx.fake_name}),
         }
         if self._run_entities:
