@@ -2,23 +2,18 @@ from palimpsest import Palimpsest
 
 processor = Palimpsest(
     verbose=False,
-    run_entities=["CREDIT_CARD"],
+    run_entities=["RU_PASSPORT"],
     locale="en-US",
 )
 
-original = "Payment card: 675944116714"
-print("original:", original)
+session = processor.create_session("passport-example")
 
-for i in range(1, 51):
-    session = processor.create_session(session_id=f"card-{i}")
+original = "Passport: 4519 345678"
 
-    anonymized = session.anonymize(original)
-    restored = session.deanonymize(anonymized)
+anonymized = session.anonymize(original)
+restored = session.deanonymize(anonymized)
 
-    print(f"attempt={i}")
-    print("anonymized:", anonymized.strip())
-    print("restored:", restored.strip())
-    print("ok:", restored.strip() == original)
-
-    if restored.strip() != original:
-        break
+print("original:", repr(original))
+print("anonymized:", repr(anonymized))
+print("restored:", repr(restored))
+print("expected contains original passport:", "4519 345678" in restored)

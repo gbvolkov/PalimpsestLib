@@ -39,6 +39,50 @@ def test_fake_value_restores_only_within_same_context(deterministic_faker_contex
     assert ctx2.defake(fake) == fake
 
 
+def test_fake_value_collision_regenerates_without_overwriting(monkeypatch):
+    import palimpsest.fakers.faker_context as context_module
+    from palimpsest.fakers.faker_context import FakerContext
+
+    monkeypatch.setattr(context_module, "fake_factory", lambda locale=None: None)
+    monkeypatch.setattr(context_module, "calc_hash", lambda value: value)
+
+    class FakeModule:
+        generated = iter(["same-fake", "same-fake", "unique-fake"])
+
+        @staticmethod
+        def fake_account(value):
+            return next(FakeModule.generated)
+
+    ctx = FakerContext(module=FakeModule)
+
+    first = ctx.fake_account("true-one")
+    second = ctx.fake_account("true-two")
+
+    assert first == "same-fake"
+    assert second == "unique-fake"
+    assert ctx.defake("same-fake") == "true-one"
+    assert ctx.defake("unique-fake") == "true-two"
+
+
+def test_fake_value_collision_exhaustion_raises(monkeypatch):
+    import palimpsest.fakers.faker_context as context_module
+    from palimpsest.fakers.faker_context import FakerContext
+
+    monkeypatch.setattr(context_module, "fake_factory", lambda locale=None: None)
+    monkeypatch.setattr(context_module, "calc_hash", lambda value: value)
+
+    class FakeModule:
+        @staticmethod
+        def fake_account(value):
+            return "same-fake"
+
+    ctx = FakerContext(module=FakeModule)
+
+    assert ctx.fake_account("true-one") == "same-fake"
+    with pytest.raises(ValueError, match="Could not generate unique fake value"):
+        ctx.fake_account("true-two")
+
+
 def test_ambiguous_fuzzy_restoration_raises_with_diagnostics(
     deterministic_faker_context,
 ):
@@ -69,6 +113,31 @@ def test_phone_normalization_makes_repeated_formats_deterministic(
     assert first == second
 
 
+def test_phone_fake_collision_regenerates_without_overwriting(monkeypatch):
+    import palimpsest.fakers.faker_context as context_module
+    from palimpsest.fakers.faker_context import FakerContext
+
+    monkeypatch.setattr(context_module, "fake_factory", lambda locale=None: None)
+    monkeypatch.setattr(context_module, "normalize_phone", lambda value: value)
+
+    class FakeModule:
+        generated = iter(["same-phone", "same-phone", "unique-phone"])
+
+        @staticmethod
+        def fake_phone(value):
+            return next(FakeModule.generated)
+
+    ctx = FakerContext(module=FakeModule)
+
+    first = ctx.fake_phone("true-phone-one")
+    second = ctx.fake_phone("true-phone-two")
+
+    assert first == "same-phone"
+    assert second == "unique-phone"
+    assert ctx.defake_phone("same-phone") == "true-phone-one"
+    assert ctx.defake_phone("unique-phone") == "true-phone-two"
+
+
 def test_address_mapping_uses_unified_hash_and_restores(
     deterministic_faker_context,
     monkeypatch,
@@ -89,6 +158,42 @@ def test_address_mapping_uses_unified_hash_and_restores(
 
     assert ctx.fake_house("Original Street 1") == fake
     assert ctx.defake_address(fake) == "Original Street 1"
+
+
+def test_address_fake_collision_regenerates_without_overwriting(
+    deterministic_faker_context,
+    monkeypatch,
+):
+    from palimpsest.fakers.faker_context import FakerContext
+
+    def fake_unify_address(value):
+        return FakeUnifiedAddress(
+            fuzzy_hash=value,
+            fuzzy_keys={f"{value}-key"},
+        )
+
+    monkeypatch.setattr(
+        deterministic_faker_context.context_module,
+        "unify_address",
+        fake_unify_address,
+    )
+
+    class FakeModule:
+        generated = iter(["same-address", "same-address", "unique-address"])
+
+        @staticmethod
+        def fake_house(value):
+            return next(FakeModule.generated)
+
+    ctx = FakerContext(module=FakeModule)
+
+    first = ctx.fake_house("true-address-one")
+    second = ctx.fake_house("true-address-two")
+
+    assert first == "same-address"
+    assert second == "unique-address"
+    assert ctx.defake_address("same-address") == "true-address-one"
+    assert ctx.defake_address("unique-address") == "true-address-two"
 
 
 def test_address_dependency_failure_rethrows_original_with_context_note(

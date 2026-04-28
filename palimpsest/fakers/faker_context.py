@@ -3,6 +3,7 @@ logger = logging.getLogger(__name__)
 
 import inspect
 import functools
+from typing import Callable
 
 from rapidfuzz import fuzz, process
 
@@ -10,6 +11,8 @@ from .faker_utils import calc_hash, normalize_phone
 from .fakers_funcs import fake_factory
 
 from ..utils.addr_unifier import unify_address
+
+MAX_FAKE_GENERATION_ATTEMPTS = 10
 
 class FakerContext:
     """
@@ -55,6 +58,26 @@ class FakerContext:
 
 
 
+    def _generate_unique_fake(
+        self,
+        value: str,
+        func: Callable[[str], str],
+        fake_hash_func: Callable[[str], str],
+        build_entry: Callable[[str], dict],
+    ) -> tuple[str, str, dict]:
+        for _ in range(MAX_FAKE_GENERATION_ATTEMPTS):
+            fake_val = func(value)
+            fake_hash = fake_hash_func(fake_val)
+            if fake_hash not in self._faked:
+                return fake_val, fake_hash, build_entry(fake_val)
+
+        raise ValueError(
+            "Could not generate unique fake value: "
+            f"func={func.__name__!r}, "
+            f"true={value!r}, "
+            f"attempts={MAX_FAKE_GENERATION_ATTEMPTS}"
+        )
+
     def _wrap(self, func):
         """Return a wrapper around func(value: str)->str that records into our maps."""
         @functools.wraps(func)
@@ -68,11 +91,16 @@ class FakerContext:
                 # already faked this exact true value
                 return self._true[h]["fake"]
 
-            fake_val = func(value)
+            fake_val, fake_hash, entry = self._generate_unique_fake(
+                value,
+                func,
+                calc_hash,
+                lambda fake: {"true": value, "fake": fake},
+            )
 
             # record forward and backward
-            self._true[h] = {"true": value, "fake": fake_val}
-            self._faked[calc_hash(fake_val)] = {"true": value, "fake": fake_val}
+            self._true[h] = entry
+            self._faked[fake_hash] = entry
 
             return fake_val
         return wrapper
@@ -88,10 +116,15 @@ class FakerContext:
             if h in self._true:
                 return self._true[h]["fake"]
 
-            fake_val = func(value)
+            fake_val, fake_hash, entry = self._generate_unique_fake(
+                value,
+                func,
+                self.phone_hash,
+                lambda fake: {"true": value, "fake": fake},
+            )
 
-            self._true[h] = {"true": value, "fake": fake_val}
-            self._faked[self.phone_hash(fake_val)] = {"true": value, "fake": fake_val}
+            self._true[h] = entry
+            self._faked[fake_hash] = entry
 
             return fake_val
         return wrapper
@@ -109,18 +142,20 @@ class FakerContext:
             if h in self._true:
                 return self._true[h]["fake"]
 
-            fake_val = func(value)
+            source_fuzzy_key = self.address_fuzzy_key(value)
+            fake_val, fake_hash, entry = self._generate_unique_fake(
+                value,
+                func,
+                self.address_hash,
+                lambda fake: {
+                    "true": value,
+                    "fake": fake,
+                    "fuzzy_key": self.address_fuzzy_key(fake),
+                },
+            )
 
-            self._true[h] = {
-                "true": value,
-                "fake": fake_val,
-                "fuzzy_key": self.address_fuzzy_key(value),
-            }
-            self._faked[self.address_hash(fake_val)] = {
-                "true": value,
-                "fake": fake_val,
-                "fuzzy_key": self.address_fuzzy_key(fake_val),
-            }
+            self._true[h] = {**entry, "fuzzy_key": source_fuzzy_key}
+            self._faked[fake_hash] = entry
             return fake_val
         return wrapper
 
