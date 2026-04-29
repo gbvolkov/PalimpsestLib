@@ -20,11 +20,22 @@ class FakerContext:
     and turns it into a method which records into context-local maps.
     """
     def __init__(self, module=None, locale = "ru_RU"):
-        fake_factory(locale=locale)
-        # if you don’t pass a module, we introspect the current one
+        # if you do not pass a module, we introspect the current one
         if module is None:
             from . import fakers_funcs as module
         self._module = module
+        self._faker_by_locale = {
+            "default": fake_factory(locale=locale),
+            "ru": fake_factory(locale="ru_RU"),
+            "en": fake_factory(locale="en_US"),
+        }
+        self._fake_func_locale = {
+            "fake_ru_bank_account": "ru",
+            "fake_ru_passport": "ru",
+            "fake_ru_name": "ru",
+            "fake_ru_address": "ru",
+            "fake_card": "en",
+        }
 
         # each context gets its own two maps
         self._true: dict[str, dict] = {}
@@ -32,20 +43,22 @@ class FakerContext:
 
         # wrap & bind every fake_* as an instance method
         phone_func = None
-        address_func = None
+        address_funcs = {}
         for name, func in inspect.getmembers(module, inspect.isfunction):
+            if name == "fake_factory":
+                continue
             if name == "fake_phone":
                 phone_func = func
                 continue
-            if name == "fake_house":
-                address_func = func
+            if name in {"fake_house", "fake_ru_address"}:
+                address_funcs[name] = func
                 continue
             if name.startswith("fake_"):
-                setattr(self, name, self._wrap(func))
+                setattr(self, name, self._wrap(name, func))
         if phone_func:
-            setattr(self, "fake_phone", self._wrap_phone(phone_func))
-        if address_func:
-            setattr(self, "fake_house", self._wrap_address(address_func))
+            setattr(self, "fake_phone", self._wrap_phone("fake_phone", phone_func))
+        for name, func in address_funcs.items():
+            setattr(self, name, self._wrap_address(name, func))
 
         # bind defake
         setattr(self, "defake", self.defake)
@@ -78,7 +91,23 @@ class FakerContext:
             f"attempts={MAX_FAKE_GENERATION_ATTEMPTS}"
         )
 
-    def _wrap(self, func):
+    def _faker_for_function(self, name: str):
+        locale_key = self._fake_func_locale.get(name, "default")
+        return self._faker_by_locale[locale_key]
+
+    def _call_fake_func(self, name: str, func: Callable[[str], str], value: str) -> str:
+        bind_faker = getattr(self._module, "bind_faker", None)
+        reset_faker = getattr(self._module, "reset_faker", None)
+        if bind_faker is None or reset_faker is None:
+            return func(value)
+
+        token = bind_faker(self._faker_for_function(name))
+        try:
+            return func(value)
+        finally:
+            reset_faker(token)
+
+    def _wrap(self, name, func):
         """Return a wrapper around func(value: str)->str that records into our maps."""
         @functools.wraps(func)
         def wrapper(value: str) -> str:
@@ -93,7 +122,7 @@ class FakerContext:
 
             fake_val, fake_hash, entry = self._generate_unique_fake(
                 value,
-                func,
+                lambda source: self._call_fake_func(name, func, source),
                 calc_hash,
                 lambda fake: {"true": value, "fake": fake},
             )
@@ -105,7 +134,7 @@ class FakerContext:
             return fake_val
         return wrapper
     
-    def _wrap_phone(self, func):
+    def _wrap_phone(self, name, func):
         """Phone-specific wrapper: direct hash by normalized phone, no fuzzy."""
         @functools.wraps(func)
         def wrapper(value: str) -> str:
@@ -118,7 +147,7 @@ class FakerContext:
 
             fake_val, fake_hash, entry = self._generate_unique_fake(
                 value,
-                func,
+                lambda source: self._call_fake_func(name, func, source),
                 self.phone_hash,
                 lambda fake: {"true": value, "fake": fake},
             )
@@ -132,7 +161,7 @@ class FakerContext:
     def phone_hash(self, value: str) -> str:
         return normalize_phone(value)
 
-    def _wrap_address(self, func):
+    def _wrap_address(self, name, func):
         """Address-specific wrapper: store hashes and fuzzy keys for reverse lookup."""
         @functools.wraps(func)
         def wrapper(value: str) -> str:
@@ -145,7 +174,7 @@ class FakerContext:
             source_fuzzy_key = self.address_fuzzy_key(value)
             fake_val, fake_hash, entry = self._generate_unique_fake(
                 value,
-                func,
+                lambda source: self._call_fake_func(name, func, source),
                 self.address_hash,
                 lambda fake: {
                     "true": value,

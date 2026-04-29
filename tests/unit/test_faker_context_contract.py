@@ -201,10 +201,40 @@ def test_ru_specific_fakers_use_ru_locale_with_en_default(monkeypatch):
     import palimpsest.fakers.faker_context as context_module
     from palimpsest.fakers.faker_context import FakerContext
 
-    monkeypatch.setattr(context_module, "fake_factory", lambda locale=None: None)
     monkeypatch.setattr(context_module, "calc_hash", lambda value: value)
     monkeypatch.setattr(FakerContext, "address_hash", lambda self, value: value)
     monkeypatch.setattr(FakerContext, "address_fuzzy_key", lambda self, value: value)
+
+    class DefaultFake:
+        def first_name(self):
+            return "John"
+
+        def last_name(self):
+            return "Doe"
+
+    class RuFake:
+        def numerify(self, pattern):
+            return "1234 567890"
+
+        def checking_account(self):
+            return "40702810900000000001"
+
+        def first_name(self):
+            return "Иван"
+
+        def last_name(self):
+            return "Иванов"
+
+        def street_address(self):
+            return "ул. Ленина, д. 1"
+
+    default_fake = DefaultFake()
+    ru_fake = RuFake()
+
+    def fake_factory(locale="ru_RU"):
+        return ru_fake if locale.replace("-", "_") == "ru_RU" else default_fake
+
+    monkeypatch.setattr(context_module, "fake_factory", fake_factory)
 
     def has_cyrillic(value: str) -> bool:
         return any("А" <= char <= "я" or char in "Ёё" for char in value)
@@ -227,17 +257,26 @@ def test_ru_specific_fakers_use_ru_locale_with_en_default(monkeypatch):
 
 def test_ru_specific_fakers_do_not_break_default_card_faker():
     from palimpsest.fakers import fakers_funcs
+    from palimpsest.fakers.faker_context import FakerContext
 
-    fakers_funcs.fake = None
     fakers_funcs._fake_by_locale = {}
-    default_fake = fakers_funcs.fake_factory("en-US")
 
-    passport = fakers_funcs.fake_ru_passport("passport")
-    card = fakers_funcs.fake_card("card")
+    ctx = FakerContext(locale="en-US")
+    default_fake = fakers_funcs.fake_factory("en_US")
+    ru_fake = fakers_funcs.fake_factory("ru_RU")
 
-    assert fakers_funcs.fake is default_fake
+    assert ctx._faker_for_function("fake_name") is default_fake
+    assert ctx._faker_for_function("fake_card") is default_fake
+    assert ctx._faker_for_function("fake_ru_passport") is ru_fake
+
+    passport = ctx.fake_ru_passport("passport")
+    card = ctx.fake_card("card")
+
     assert re.fullmatch(r"(\d{4} \d{6})|(\d{2} \d{2} \d{6})", passport)
     assert re.fullmatch(r"\d{16}", card)
+
+    with pytest.raises(RuntimeError, match="No Faker is bound"):
+        fakers_funcs.fake_card("card")
 
 
 def test_address_dependency_failure_rethrows_original_with_context_note(

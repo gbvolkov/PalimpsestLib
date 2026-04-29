@@ -1,21 +1,41 @@
 import logging
 logger = logging.getLogger(__name__)
 
+from contextvars import ContextVar, Token
+
 from faker import Faker
 
 from .faker_utils import validate_name
 
-fake = None
-_fake_by_locale = {}
+_current_faker: ContextVar[Faker | None] = ContextVar(
+    "palimpsest_current_faker",
+    default=None,
+)
+_fake_by_locale: dict[str, Faker] = {}
 
-def fake_factory(locale: str = "ru-RU", set_default: bool = True)-> Faker:
-    global fake
-    if locale not in _fake_by_locale:
-        _fake_by_locale[locale] = Faker(locale=locale)
-    locale_fake = _fake_by_locale[locale]
-    if set_default or fake is None:
-        fake = locale_fake
-    return locale_fake
+def fake_factory(locale: str = "ru-RU", set_default: bool | None = None)-> Faker:
+    locale_key = locale.replace("-", "_")
+    if locale_key not in _fake_by_locale:
+        _fake_by_locale[locale_key] = Faker(locale=locale_key)
+    return _fake_by_locale[locale_key]
+
+def bind_faker(faker: Faker) -> Token:
+    return _current_faker.set(faker)
+
+def reset_faker(token: Token) -> None:
+    _current_faker.reset(token)
+
+def current_faker() -> Faker:
+    faker = _current_faker.get()
+    if faker is None:
+        raise RuntimeError("No Faker is bound to the current Palimpsest faker call")
+    return faker
+
+class FakerProxy:
+    def __getattr__(self, name: str):
+        return getattr(current_faker(), name)
+
+fake = FakerProxy()
 
 faked_values = {}
 true_values = {}
@@ -24,7 +44,7 @@ def fake_account(x):
     return fake.checking_account()
 
 def fake_ru_bank_account(x):
-    return fake_factory("ru_RU", set_default=False).checking_account()
+    return fake.checking_account()
 
 def fake_snils(x):
     return fake.snils()
@@ -36,7 +56,7 @@ def fake_passport(x):
     return fake.passport_number()
 
 def fake_ru_passport(x):
-    return fake_factory("ru_RU", set_default=False).numerify("#### ######")
+    return fake.numerify("#### ######")
 
 def fake_name(x):
     attempts = 10
@@ -49,8 +69,7 @@ def fake_name(x):
     return name
 
 def fake_ru_name(x):
-    ru_fake = fake_factory("ru_RU", set_default=False)
-    return ru_fake.first_name() + " " + ru_fake.last_name()
+    return fake.first_name() + " " + fake.last_name()
 
 def fake_first_name(x):
     attempts = 10
@@ -90,7 +109,7 @@ def fake_house(x):
     return fake.street_address()
 
 def fake_ru_address(x):
-    return fake_factory("ru_RU", set_default=False).street_address()
+    return fake.street_address()
 
 def fake_city(x):
     return fake.city()
@@ -107,7 +126,7 @@ def fake_phone(x):
     return fake.phone_number()
 
 def fake_card(x):
-    return fake_factory("en_US", set_default=False).credit_card_number(card_type="visa16")
+    return fake.credit_card_number(card_type="visa16")
 
 def fake_ip(x):
     return fake.ipv4_public()

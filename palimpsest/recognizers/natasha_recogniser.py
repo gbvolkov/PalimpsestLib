@@ -47,7 +47,7 @@ class NatashaSlovnetRecognizer(EntityRecognizer):
             presidio_label = {
                 "PER": "RU_PERSON",
                 #"LOC": "LOCATION",
-                "ORG": "RU ORGANIZATION",
+                "ORG": "RU_ORGANIZATION",
             }.get(label, label)
             # фильтруем, если у нас есть entities-фильтр
             if entities and presidio_label not in entities:
@@ -82,4 +82,4 @@ if __name__ == "__main__":
     print("\n=== Russian call ===")
     result = engine.analyze(text=text, language="en", return_decision_process=True)
     for r in result:
-        print(f"{r.entity_type}: `{text_ru[r.start:r.end]}` (score={r.score:.2f})) , Recognizer:{r.recognition_metadata['recognizer_name']}")
+        print(f"{r.entity_type}: `{text[r.start:r.end]}` (score={r.score:.2f})) , Recognizer:{r.recognition_metadata['recognizer_name']}")
