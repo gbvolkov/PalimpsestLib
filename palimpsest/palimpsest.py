@@ -56,10 +56,19 @@ class _PalimpsestRuntime:
             "gliner-community/gliner_large-v2.5",
             run_entities=run_entities,
         )
-        self._tokenizer = AutoTokenizer.from_pretrained(
-            "gliner-community/gliner_large-v2.5"#,
-            #local_files_only=True,
-        )
+        try:
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                "gliner-community/gliner_large-v2.5"#,
+                #local_files_only=True,
+            )
+        except Exception as exc:
+            exc.add_note(
+                "Palimpsest "
+                "operation=tokenizer_init "
+                "component=_PalimpsestRuntime "
+                "model_id='gliner-community/gliner_large-v2.5'"
+            )
+            raise
         self._calc_len = _length_factory(self._tokenizer)
         supported = self._analyzer.get_supported_entities() + RU_ENTITIES
         if "IN_PAN" in supported:

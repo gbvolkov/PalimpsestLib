@@ -23,6 +23,8 @@ from .recognizers.regex_recognisers import (
 )
 from .recognizers.natasha_recogniser import NatashaSlovnetRecognizer
 
+_SPACY_MODEL = "ru_core_news_lg"
+
 
 def create_nlp_engine_with_transformers(
     model_path: str,
@@ -35,13 +37,16 @@ def create_nlp_engine_with_transformers(
     """
     print(f"Loading Transformers model: {model_path} of type {type(model_path)}")
 
+    if not spacy.util.is_package(_SPACY_MODEL):
+        spacy.cli.download(_SPACY_MODEL)
+
     nlp_configuration = {
         "nlp_engine_name": "transformers",
         "models": [
             {
                 "lang_code": "en",
                 #"model_name": {"spacy": "en_core_web_sm", "transformers": model_path},
-                "model_name": {"spacy": "ru_core_news_sm", "transformers": model_path},
+                "model_name": {"spacy": _SPACY_MODEL, "transformers": model_path},
             }
         ],
         "ner_model_configuration": {
@@ -155,15 +160,15 @@ def create_nlp_engine_with_natasha(
 
     # there is no official Flair NlpEngine, hence we load it as an additional recognizer
     #spacy_model = "en_core_web_sm"
-    spacy_model = "ru_core_news_sm"
-    if not spacy.util.is_package(spacy_model):
-        spacy.cli.download(spacy_model)
+    #spacy_model = "ru_core_news_lg"
+    if not spacy.util.is_package(_SPACY_MODEL):
+        spacy.cli.download(_SPACY_MODEL)
     # Using a small spaCy model + a Flair NER model
     natasha_recognizer = NatashaSlovnetRecognizer()
     nlp_configuration = {
         "nlp_engine_name": "spacy",
         #"models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
-        "models": [{"lang_code": "en", "model_name": "ru_core_news_lg"}],
+        "models": [{"lang_code": "en", "model_name": _SPACY_MODEL}],
     }
     registry.add_recognizer(natasha_recognizer)
     registry.remove_recognizer("SpacyRecognizer")
@@ -173,7 +178,7 @@ def create_nlp_engine_with_natasha(
     return nlp_engine, registry
 
 def create_nlp_engine_with_gliner(
-    model_path: str,
+    model_path: str = "gliner-community/gliner_large-v2.5",
     run_entities: Optional[List[str]] = None,
 ) -> Tuple[NlpEngine, RecognizerRegistry]:
     """
@@ -189,15 +194,15 @@ def create_nlp_engine_with_gliner(
 
     # there is no official Flair NlpEngine, hence we load it as an additional recognizer
 
-    spacy_model = "ru_core_news_sm"
-    if not spacy.util.is_package(spacy_model):
-        spacy.cli.download(spacy_model)
+    #spacy_model = "ru_core_news_lg"
+    if not spacy.util.is_package(_SPACY_MODEL):
+        spacy.cli.download(_SPACY_MODEL)
     # Using a small spaCy model + a Flair NER model
-    gliner_recognizer = GlinerRecognizer(run_entities=run_entities)
+    gliner_recognizer = GlinerRecognizer(run_entities=run_entities, model_path=model_path)
     nlp_configuration = {
         "nlp_engine_name": "spacy",
         #"models": [{"lang_code": "en", "model_name": "en_core_web_sm"}],
-        "models": [{"lang_code": "en", "model_name": "ru_core_news_lg"}],
+        "models": [{"lang_code": "en", "model_name": _SPACY_MODEL}],
     }
     registry.add_recognizer(gliner_recognizer)
     registry.remove_recognizer("SpacyRecognizer")

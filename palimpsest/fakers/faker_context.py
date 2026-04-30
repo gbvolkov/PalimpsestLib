@@ -189,11 +189,31 @@ class FakerContext:
         return wrapper
 
     def address_hash(self, value: str) -> str:
-        unified_addr = unify_address(value)
+        try:
+            unified_addr = unify_address(value)
+        except Exception as exc:
+            exc.add_note(
+                "Palimpsest "
+                "operation=address_hash "
+                "component=FakerContext "
+                "dependency=libpostal "
+                f"value={value!r}"
+            )
+            raise
         return unified_addr.fuzzy_hash
 
     def address_fuzzy_key(self, value: str) -> str:
-        unified_addr = unify_address(value)
+        try:
+            unified_addr = unify_address(value)
+        except Exception as exc:
+            exc.add_note(
+                "Palimpsest "
+                "operation=address_fuzzy_key "
+                "component=FakerContext "
+                "dependency=libpostal "
+                f"value={value!r}"
+            )
+            raise
         return "\n".join(sorted(unified_addr.fuzzy_keys))
     
     def defake(self, fake):

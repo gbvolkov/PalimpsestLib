@@ -18,6 +18,10 @@ class DeviceMoveError(RuntimeError):
     pass
 
 
+class GlinerModelLoadError(RuntimeError):
+    pass
+
+
 def test_tokenizer_load_failure_rethrows_original_with_context_note(monkeypatch):
     import palimpsest.analyzer_engine_provider as provider_module
     import palimpsest.palimpsest as palimpsest_module
@@ -47,6 +51,25 @@ def test_tokenizer_load_failure_rethrows_original_with_context_note(monkeypatch)
         "operation",
         "tokenizer",
         "gliner-community/gliner_large-v2.5",
+    )
+
+
+def test_gliner_model_load_failure_rethrows_original_with_context_note(monkeypatch):
+    import palimpsest.recognizers.gliner_recogniser as gliner_module
+
+    def fail_from_pretrained(*args, **kwargs):
+        raise GlinerModelLoadError("gliner model payload")
+
+    monkeypatch.setattr(gliner_module.GLiNER, "from_pretrained", fail_from_pretrained)
+
+    with pytest.raises(GlinerModelLoadError) as exc_info:
+        gliner_module.GlinerRecognizer(model_path="missing-gliner-model")
+
+    assert_note_contains(
+        exc_info.value,
+        "operation",
+        "gliner_model_load",
+        "missing-gliner-model",
     )
 
 

@@ -66,7 +66,16 @@ class GlinerRecognizer(EntityRecognizer):
             supported_language="en",
             name="GlinerRecognizer",
         )
-        self._model = GLiNER.from_pretrained(model_path) #, local_files_only=True)
+        try:
+            self._model = GLiNER.from_pretrained(model_path) #, local_files_only=True)
+        except Exception as exc:
+            exc.add_note(
+                "Palimpsest "
+                "operation=gliner_model_load "
+                "component=GlinerRecognizer "
+                f"model_path={model_path!r}"
+            )
+            raise
         # Move model to device explicitly
         try:
             self._model.to(device)

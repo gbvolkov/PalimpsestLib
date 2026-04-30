@@ -7,3 +7,5 @@ data
 logs
 
 gv.env
+*.egg-info/
+et --soft 8f29b9a
