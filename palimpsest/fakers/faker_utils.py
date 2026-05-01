@@ -12,6 +12,8 @@ def get_nlp():
     global _nlp
     if _nlp is None:
         import spacy
+        if not spacy.util.is_package("ru_core_news_sm"):
+            spacy.cli.download("ru_core_news_sm")
 
         _nlp = spacy.load("ru_core_news_sm")
     return _nlp
