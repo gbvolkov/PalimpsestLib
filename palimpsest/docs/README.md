@@ -2,6 +2,9 @@
 
 Start here for future Codex or agent work:
 
+- `developer_guide.md` is the comprehensive developer guide covering public
+  API methods, recognizers, models, supported entities, deanonymizers,
+  limitations, and LangGraph integration.
 - `agent_guidance.md` contains mandatory engineering rules for changes to the
   Palimpsest library.
 - `fail_fast_policy.md` defines the fail-fast contract and the required

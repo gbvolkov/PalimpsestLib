@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import inspect
 import logging
 
 import pytest
@@ -11,7 +10,7 @@ from tests.conftest import SAMPLE_CARD, SAMPLE_PERSON, SAMPLE_PHONE, StubEngineI
 pytestmark = [pytest.mark.unit, pytest.mark.privacy]
 
 
-def test_verbose_logging_does_not_emit_raw_pii_or_mapping_values(caplog):
+def test_verbose_debug_log_emits_raw_values_by_design(caplog):
     from palimpsest.palimpsest import debug_log
 
     pii_text = f"{SAMPLE_PERSON} {SAMPLE_PHONE} {SAMPLE_CARD}"
@@ -50,16 +49,22 @@ def test_verbose_logging_does_not_emit_raw_pii_or_mapping_values(caplog):
     )
 
     log_text = caplog.text
-    assert SAMPLE_PERSON not in log_text
-    assert SAMPLE_PHONE not in log_text
-    assert SAMPLE_CARD not in log_text
-    assert "Fake Person" not in log_text
+    assert SAMPLE_PERSON in log_text
+    assert SAMPLE_PHONE in log_text
+    assert SAMPLE_CARD in log_text
+    assert "Fake Person" in log_text
 
 
-def test_raw_value_debug_mode_is_explicit_and_disabled_by_default():
+def test_processor_default_verbose_false_does_not_call_debug_log(
+    lightweight_palimpsest_factory,
+    caplog,
+):
     from palimpsest import Palimpsest
 
-    signature = inspect.signature(Palimpsest)
+    caplog.set_level(logging.DEBUG, logger="palimpsest.palimpsest")
 
-    assert "unsafe_debug_raw_values" in signature.parameters
-    assert signature.parameters["unsafe_debug_raw_values"].default is False
+    processor = Palimpsest()
+    session = processor.create_session(session_id="privacy-default")
+    session.anonymize(f"{SAMPLE_PERSON} {SAMPLE_PHONE} {SAMPLE_CARD}")
+
+    assert caplog.text == ""

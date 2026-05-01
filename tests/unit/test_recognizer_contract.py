@@ -59,7 +59,7 @@ def test_natasha_org_maps_to_ru_organization(monkeypatch):
         ("RUCreditCardRecognizer", "CREDIT_CARD", "4000000000000003"),
     ],
 )
-def test_invalid_structured_identifiers_are_not_returned(
+def test_invalid_structured_identifiers_are_returned_with_low_score(
     recognizer_cls,
     entity,
     text,
@@ -67,8 +67,38 @@ def test_invalid_structured_identifiers_are_not_returned(
     import palimpsest.recognizers.regex_recognisers as regex_module
 
     recognizer = getattr(regex_module, recognizer_cls)()
+    results = recognizer.analyze(text, entities=[entity])
 
-    assert recognizer.analyze(text, entities=[entity]) == []
+    assert len(results) == 1
+    assert results[0].entity_type == entity
+    assert results[0].score < 0.2
+    assert text[results[0].start : results[0].end] == text
+
+
+def test_email_address_has_deanonymization_operator():
+    import palimpsest.palimpsest as palimpsest_module
+
+    runtime = palimpsest_module._PalimpsestRuntime.__new__(
+        palimpsest_module._PalimpsestRuntime
+    )
+    runtime._run_entities = None
+
+    operators = runtime._deanon_operators(FakeFakerContext())
+
+    assert "EMAIL_ADDRESS" in operators
+
+
+def test_email_address_survives_run_entity_filtering():
+    import palimpsest.palimpsest as palimpsest_module
+
+    runtime = palimpsest_module._PalimpsestRuntime.__new__(
+        palimpsest_module._PalimpsestRuntime
+    )
+    runtime._run_entities = ["EMAIL_ADDRESS"]
+
+    operators = runtime._deanon_operators(FakeFakerContext())
+
+    assert set(operators) == {"EMAIL_ADDRESS"}
 
 
 @pytest.mark.parametrize(

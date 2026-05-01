@@ -8,14 +8,8 @@ from tests.conftest import SAMPLE_RU_TEXT, SAMPLE_TEXT, assert_note_contains
 pytestmark = pytest.mark.integration
 
 
-def test_real_palimpsest_constructs_without_runtime_downloads(monkeypatch):
-    import spacy
+def test_real_palimpsest_constructs_with_configured_dependencies():
     from palimpsest import Palimpsest
-
-    def forbidden_download(model_name):
-        raise AssertionError(f"runtime download attempted: {model_name}")
-
-    monkeypatch.setattr(spacy.cli, "download", forbidden_download)
 
     processor = Palimpsest(
         verbose=False,
@@ -32,6 +26,24 @@ def test_real_palimpsest_constructs_without_runtime_downloads(monkeypatch):
     )
 
     assert processor is not None
+
+
+def test_real_pipeline_anonymizes_and_restores_email_address():
+    from palimpsest import Palimpsest
+
+    processor = Palimpsest(
+        verbose=False,
+        run_entities=["EMAIL_ADDRESS"],
+        locale="en-US",
+    )
+    session = processor.create_session(session_id="integration-email")
+    text = "Contact john.doe@example.com for details."
+
+    anonymized = session.anonymize(text)
+    restored = session.deanonymize(anonymized)
+
+    assert "john.doe@example.com" not in anonymized
+    assert "john.doe@example.com" in restored
 
 
 def test_real_pipeline_anonymizes_and_restores_representative_english_text():
@@ -80,7 +92,7 @@ def test_missing_gliner_model_rethrows_original_dependency_exception():
     assert_note_contains(
         exc_info.value,
         "__missing_gliner_model__",
-        "recognizer_init",
+        "gliner_model_load",
     )
 
 

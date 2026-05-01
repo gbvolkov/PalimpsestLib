@@ -1,6 +1,6 @@
 # Accepted Findings
 
-As of 2026-04-30, the items below are known review findings that remain in the
+As of 2026-05-01, the items below are known review findings that remain in the
 codebase by explicit acceptance. They are not active defects for the current
 scope, but they do define operational constraints and expected behavior.
 
@@ -83,3 +83,46 @@ scope, but they do define operational constraints and expected behavior.
 - Operational implication:
   Downstream thresholds and operator handling must be chosen carefully to avoid
   acting on weak numeric matches.
+
+## 7. Analysis may add newline separators to caller text
+
+- Status: Accepted
+- Location: `palimpsest/palimpsest.py`, `_PalimpsestRuntime.analyze()`
+- Current behavior:
+  Analyzed text is rebuilt from chunks and appends `"\n"` after each chunk. This
+  can add trailing or additional newlines to anonymized and deanonymized output.
+- Acceptance basis:
+  This formatting behavior is currently intentional and not considered a
+  defect.
+- Operational implication:
+  Callers that require exact whitespace preservation should normalize or compare
+  output accordingly.
+
+## 8. Fuzzy restoration does not raise on ambiguous matches
+
+- Status: Accepted
+- Location: `palimpsest/fakers/faker_context.py`, `defake_fuzzy()`
+- Current behavior:
+  Fuzzy restoration uses the best match returned by `rapidfuzz.process.extractOne`
+  and does not raise when multiple stored fake values could plausibly match.
+- Acceptance basis:
+  Best-match fuzzy restoration is accepted behavior for the current
+  implementation.
+- Operational implication:
+  Callers that require deterministic restoration should prefer exact-match
+  entity types or avoid workflows that can create ambiguous fake values.
+
+## 9. Address exception notes include the raw input value
+
+- Status: Accepted
+- Location: `palimpsest/fakers/faker_context.py`, `address_hash()` and
+  `address_fuzzy_key()`
+- Current behavior:
+  When libpostal address processing raises, Palimpsest rethrows the original
+  exception with a diagnostic note that includes `value={value!r}`.
+- Acceptance basis:
+  The caller already supplied the address value, and logging or exposing
+  exception details is the caller's operational decision.
+- Operational implication:
+  Callers should avoid logging exception notes in privacy-sensitive environments
+  if those notes may contain address PII.

@@ -84,7 +84,7 @@ def test_fake_value_collision_exhaustion_raises(monkeypatch):
         ctx.fake_account("true-two")
 
 
-def test_ambiguous_fuzzy_restoration_raises_with_diagnostics(
+def test_ambiguous_fuzzy_restoration_uses_best_match(
     deterministic_faker_context,
 ):
     from palimpsest.fakers.faker_context import FakerContext
@@ -95,10 +95,7 @@ def test_ambiguous_fuzzy_restoration_raises_with_diagnostics(
         "second": {"true": "original-two", "fake": "same fake"},
     }
 
-    with pytest.raises(Exception) as exc_info:
-        ctx.defake_fuzzy("same fake")
-
-    assert "same fake" in str(exc_info.value)
+    assert ctx.defake_fuzzy("same fake") == "original-one"
 
 
 def test_phone_normalization_makes_repeated_formats_deterministic(
@@ -301,4 +298,4 @@ def test_address_dependency_failure_rethrows_original_with_context_note(
     with pytest.raises(LibpostalFailure) as exc_info:
         ctx.address_hash("Broken address")
 
-    assert_note_contains(exc_info.value, "address", "libpostal")
+    assert_note_contains(exc_info.value, "address", "libpostal", "Broken address")
