@@ -219,21 +219,14 @@ class FakerContext:
     def defake(self, fake):
         if fake == 'PII':
             return fake
-        hash = calc_hash(fake)
-        if hash in self._faked:
-            logger.debug(f"FAKE FOUND: request: {fake}; hash: {hash}; true: {self._faked[hash].get('true')}; fake: {self._faked[hash].get('fake')}")
-            return self._faked[hash].get('true')
-        else:
-            logger.debug(f"FAKE NOT FOUND: request: {fake}; hash: {hash}")
-            return fake
+        fake_hash = calc_hash(fake)
+        return self._faked[fake_hash].get('true') if fake_hash in self._faked else fake
     
     def defake_phone(self, fake):
         if fake == 'PII':
             return fake
         h = self.phone_hash(fake)
-        if h in self._faked:
-            return self._faked[h].get('true')
-        return fake
+        return self._faked[h].get('true') if h in self._faked else fake
 
     def defake_address(self, fake):
         if fake == 'PII':
@@ -248,21 +241,17 @@ class FakerContext:
         fuzzy_key = self.address_fuzzy_key(fake)
         stored_keys = [entry.get("fuzzy_key", "") for _, entry in items]
         best = process.extractOne(fuzzy_key, stored_keys, scorer=fuzz.partial_ratio, score_cutoff=60)
-        if best:
-            return items[best[2]][1].get("true", fake)
-        return fake
+        return items[best[2]][1].get("true", fake) if best else fake
 
     def defake_fuzzy(self, fake):
         if fake == 'PII':
             return fake
-        items = list(self._faked.items())  
+        items = list(self._faked.items())
         fakes = [entry["fake"] for _, entry in items]
         best_fake = process.extractOne(fake, fakes, scorer=fuzz.partial_token_sort_ratio, score_cutoff=60)
         if best_fake:
-            true_value = [entry["true"] for _, entry in items][best_fake[2]]
-            logger.debug(f"Fuzzy search result: request: {fake}; found: {best_fake[0]}; score: {best_fake[1]}; true_value: {true_value}")
-            return true_value
-            #faked_entries = [v for v in faked_values.values() if v["fake"] == best_fake[0]]
+            return [entry["true"] for _, entry in items][best_fake[2]]
+                #faked_entries = [v for v in faked_values.values() if v["fake"] == best_fake[0]]
         else:
             return self.defake(fake)
 

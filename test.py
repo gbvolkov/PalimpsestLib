@@ -35,6 +35,7 @@ llm = ChatYandexGPT(
 anon_entities = [
     "RU_PERSON"
     ,"RU_ADDRESS"
+    ,"EMAIL_ADDRESS"
     ,"PERSON"
     ,"CREDIT_CARD"
     ,"PHONE_NUMBER"
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     
     text = """Client John Doe (4519227557), on behalf of William Scheffler (4519227557), contacted “Interleasing” with a proposal to buy a tractor.
 Payment will be made using his card 4095260993934932 or his Maestro card 675944116713.
-Call him at 986-777-7777 or 985-777-7237.
+Call him at 986-777-7777 or 985-777-7237. Email: rrr@rr.ru
 Or visit him at London, City, str Queen Elisabeth, building 1/2, apt. 17.
 You can view his data at https://client.ileasing.com/name=doe:3000
  or go to 182.34.35.12/

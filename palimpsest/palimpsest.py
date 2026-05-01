@@ -116,10 +116,12 @@ class _PalimpsestRuntime:
             "PHONE_NUMBER": OperatorConfig("custom", {"lambda": ctx.defake_phone}),
             "IP_ADDRESS": OperatorConfig("custom", {"lambda": ctx.defake}),
             "URL": OperatorConfig("custom", {"lambda": ctx.defake_fuzzy}),
+            "EMAIL_ADDRESS": OperatorConfig("custom", {"lambda": ctx.defake}),
             "RU_PASSPORT": OperatorConfig("custom", {"lambda": ctx.defake}),
             "SNILS": OperatorConfig("custom", {"lambda": ctx.defake}),
             "INN": OperatorConfig("custom", {"lambda": ctx.defake}),
             "RU_BANK_ACC": OperatorConfig("custom", {"lambda": ctx.defake}),
+            "Person": OperatorConfig("custom", {"lambda": ctx.defake_fuzzy}),
         }
         if self._run_entities:
             return _filter_dict(operators, self._run_entities)
