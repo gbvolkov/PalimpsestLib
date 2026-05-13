@@ -40,6 +40,39 @@ def test_fake_value_restores_only_within_same_context(deterministic_faker_contex
     assert ctx2.defake(fake) == fake
 
 
+def test_fake_value_is_available_for_exact_text_restoration(
+    deterministic_faker_context,
+):
+    from palimpsest.fakers.faker_context import FakerContext
+
+    ctx = FakerContext(module=deterministic_faker_context.module)
+
+    fake = ctx.fake_account("account-1")
+
+    assert ctx.defake_exact(fake) == "account-1"
+    assert ctx.deanonymize_exact_text(f"Value: {fake}") == "Value: account-1"
+
+
+def test_typed_placeholders_are_typed_incrementing_and_exact(
+    deterministic_faker_context,
+):
+    from palimpsest.fakers.faker_context import FakerContext
+
+    ctx = FakerContext(module=deterministic_faker_context.module)
+    identity_hash = lambda value: value.lower()
+
+    person = ctx.typed_placeholder("PERSON", "John Williams", identity_hash)
+    same_person = ctx.typed_placeholder("RU_PERSON", "John Williams", identity_hash)
+    phone = ctx.typed_placeholder("PHONE_NUMBER", "445856786", identity_hash)
+
+    assert person == "PERSON_001"
+    assert same_person == person
+    assert phone == "PHONE_001"
+    assert ctx.deanonymize_exact_text(
+        "Call PERSON_001 at PHONE_001",
+    ) == "Call John Williams at 445856786"
+
+
 def test_fake_value_collision_regenerates_without_overwriting(monkeypatch):
     import palimpsest.fakers.faker_context as context_module
     from palimpsest.fakers.faker_context import FakerContext

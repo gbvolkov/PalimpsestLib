@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from collections.abc import Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from threading import RLock
 from typing import Any, List
@@ -19,6 +21,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+FAKE_REPLACEMENT = "fake"
+TYPED_PLACEHOLDER_REPLACEMENT = "typed_placeholder"
+
+_REPLACEMENT_ALIASES = {
+    "fake": FAKE_REPLACEMENT,
+    "faker": FAKE_REPLACEMENT,
+    "faked": FAKE_REPLACEMENT,
+    "typed_placeholder": TYPED_PLACEHOLDER_REPLACEMENT,
+    "typed_placeholders": TYPED_PLACEHOLDER_REPLACEMENT,
+    "placeholder": TYPED_PLACEHOLDER_REPLACEMENT,
+    "placeholders": TYPED_PLACEHOLDER_REPLACEMENT,
+}
+
+
+@dataclass(frozen=True)
+class EntityReplacement:
+    entity_type: str
+    strategy: str = FAKE_REPLACEMENT
+
 def _length_factory(tokenizer: Any = None):
     @lru_cache(maxsize=5000, typed=True)
     def _len(text: str) -> int:
@@ -33,6 +54,63 @@ def _filter_dict(d: dict, valid_keys)-> dict:
     valid = set(valid_keys)
     return {k: v for k, v in d.items() if k in valid}
 
+
+def _normalize_replacement_strategy(strategy: str) -> str:
+    normalized = _REPLACEMENT_ALIASES.get(str(strategy).strip().lower())
+    if normalized is None:
+        valid = ", ".join(sorted(set(_REPLACEMENT_ALIASES.values())))
+        raise ValueError(
+            f"Unsupported replacement strategy {strategy!r}; expected one of: {valid}"
+        )
+    return normalized
+
+
+def _normalize_entity_replacements(entity_replacements) -> OrderedDict[str, str] | None:
+    if entity_replacements is None:
+        return None
+
+    normalized: OrderedDict[str, str] = OrderedDict()
+    if isinstance(entity_replacements, Mapping):
+        items = entity_replacements.items()
+    else:
+        items = entity_replacements
+
+    for item in items:
+        if isinstance(item, EntityReplacement):
+            entity_type = item.entity_type
+            strategy = item.strategy
+        elif isinstance(item, str):
+            entity_type = item
+            strategy = FAKE_REPLACEMENT
+        elif isinstance(item, Mapping):
+            entity_type = (
+                item.get("entity_type")
+                or item.get("entity")
+                or item.get("type")
+                or item.get("name")
+            )
+            strategy = (
+                item.get("strategy")
+                or item.get("replacement")
+                or item.get("mode")
+                or item.get("operator")
+                or FAKE_REPLACEMENT
+            )
+        else:
+            try:
+                entity_type, strategy = item
+            except (TypeError, ValueError) as exc:
+                raise ValueError(
+                    "Entity replacement entries must be strings, "
+                    "EntityReplacement objects, mappings, or (entity, strategy) pairs"
+                ) from exc
+
+        if not entity_type:
+            raise ValueError(f"Entity replacement entry is missing an entity type: {item!r}")
+        normalized[str(entity_type)] = _normalize_replacement_strategy(strategy)
+
+    return normalized
+
 class PalimpsestSessionError(RuntimeError):
     """Base class for Palimpsest session-state errors."""
 
@@ -43,6 +121,50 @@ class SessionRequiredError(PalimpsestSessionError):
 
 class SessionStateError(PalimpsestSessionError):
     """Raised when a session is closed, foreign, or has no usable mapping."""
+
+
+_FAKE_OPERATOR_METHODS = {
+    "RU_ORGANIZATION": "fake_organization",
+    "ORGANIZATION": "fake_organization",
+    "RU_CITY": "fake_city",
+    "RU_PERSON": "fake_name",
+    "PERSON": "fake_name",
+    "Person": "fake_name",
+    "RU_ADDRESS": "fake_house",
+    "CREDIT_CARD": "fake_card",
+    "PHONE_NUMBER": "fake_phone",
+    "IP_ADDRESS": "fake_ip",
+    "URL": "fake_url",
+    "EMAIL_ADDRESS": "fake_email",
+    "RU_PASSPORT": "fake_ru_passport",
+    "SNILS": "fake_snils",
+    "INN": "fake_inn",
+    "RU_BANK_ACC": "fake_ru_bank_account",
+}
+
+_DEFAKE_OPERATOR_METHODS = {
+    "RU_ORGANIZATION": "defake_fuzzy",
+    "ORGANIZATION": "defake_fuzzy",
+    "RU_CITY": "defake",
+    "RU_PERSON": "defake_fuzzy",
+    "PERSON": "defake_fuzzy",
+    "Person": "defake_fuzzy",
+    "RU_ADDRESS": "defake_address",
+    "CREDIT_CARD": "defake",
+    "PHONE_NUMBER": "defake_phone",
+    "IP_ADDRESS": "defake",
+    "URL": "defake_fuzzy",
+    "EMAIL_ADDRESS": "defake",
+    "RU_PASSPORT": "defake",
+    "SNILS": "defake",
+    "INN": "defake",
+    "RU_BANK_ACC": "defake",
+}
+
+_PLACEHOLDER_TRUE_HASH_METHODS = {
+    "PHONE_NUMBER": "phone_hash",
+    "RU_ADDRESS": "address_hash",
+}
 
 
 class _PalimpsestRuntime:
@@ -78,7 +200,65 @@ class _PalimpsestRuntime:
         self._engine = AnonymizerEngine()
         self._cr_key = CRYPRO_KEY
 
-    def _anon_operators(self, ctx: FakerContext) -> dict:
+    def _fake_operator(self, ctx: FakerContext, entity_type: str) -> OperatorConfig:
+        method_name = _FAKE_OPERATOR_METHODS.get(entity_type)
+        if not method_name:
+            raise ValueError(
+                f"Entity {entity_type!r} does not have a fake replacement operator; "
+                f"use {TYPED_PLACEHOLDER_REPLACEMENT!r} or add a fake operator"
+            )
+        return OperatorConfig("custom", {"lambda": getattr(ctx, method_name)})
+
+    def _placeholder_true_hash_func(self, ctx: FakerContext, entity_type: str):
+        method_name = _PLACEHOLDER_TRUE_HASH_METHODS.get(entity_type)
+        if method_name:
+            return getattr(ctx, method_name)
+        return None
+
+    def _typed_placeholder_operator(
+        self,
+        ctx: FakerContext,
+        entity_type: str,
+    ) -> OperatorConfig:
+        true_hash_func = self._placeholder_true_hash_func(ctx, entity_type)
+        return OperatorConfig(
+            "custom",
+            {
+                "lambda": (
+                    lambda value, entity_type=entity_type, true_hash_func=true_hash_func:
+                    ctx.typed_placeholder(entity_type, value, true_hash_func)
+                )
+            },
+        )
+
+    def _deanon_operator(
+        self,
+        ctx: FakerContext,
+        entity_type: str,
+        exact: bool = False,
+    ) -> OperatorConfig:
+        if exact:
+            return OperatorConfig("custom", {"lambda": ctx.defake_exact})
+        method_name = _DEFAKE_OPERATOR_METHODS.get(entity_type, "defake")
+        return OperatorConfig("custom", {"lambda": getattr(ctx, method_name)})
+
+    def _anon_operators(
+        self,
+        ctx: FakerContext,
+        entity_replacements: Mapping[str, str] | None = None,
+    ) -> dict:
+        if entity_replacements is not None:
+            operators = {"DEFAULT": OperatorConfig("keep")}
+            for entity_type, strategy in entity_replacements.items():
+                if strategy == TYPED_PLACEHOLDER_REPLACEMENT:
+                    operators[entity_type] = self._typed_placeholder_operator(
+                        ctx,
+                        entity_type,
+                    )
+                elif strategy == FAKE_REPLACEMENT:
+                    operators[entity_type] = self._fake_operator(ctx, entity_type)
+            return operators
+
         operators = {
             #"DEFAULT": OperatorConfig("encrypt", {"key": self._cr_key}),
             "DEFAULT": OperatorConfig("keep"),
@@ -103,7 +283,22 @@ class _PalimpsestRuntime:
             return _filter_dict(operators, self._run_entities)
         return operators
 
-    def _deanon_operators(self, ctx: FakerContext) -> dict:
+    def _deanon_operators(
+        self,
+        ctx: FakerContext,
+        entity_replacements: Mapping[str, str] | None = None,
+        exact: bool = False,
+    ) -> dict:
+        if entity_replacements is not None:
+            operators = {"DEFAULT": OperatorConfig("keep")}
+            for entity_type in entity_replacements:
+                operators[entity_type] = self._deanon_operator(
+                    ctx,
+                    entity_type,
+                    exact=exact,
+                )
+            return operators
+
         operators = {
             "DEFAULT": OperatorConfig("keep"),
             "TICKET_NUMBER": OperatorConfig("keep"),
@@ -158,26 +353,40 @@ class _PalimpsestRuntime:
             shift = len(final_text)
         return final_text, analyzer_results
 
-    def anonymize(self, ctx: FakerContext, text: str):
-        final_text, analyzer_results = self.analyze(text)
+    def anonymize(
+        self,
+        ctx: FakerContext,
+        text: str,
+        entity_replacements: Mapping[str, str] | None = None,
+    ):
+        analyzer_entities = list(entity_replacements) if entity_replacements else None
+        final_text, analyzer_results = self.analyze(text, analyzer_entities)
         result = self._engine.anonymize(
             text=final_text,
             analyzer_results=analyzer_results,
-            operators=self._anon_operators(ctx),
+            operators=self._anon_operators(ctx, entity_replacements),
         )
         return result.text, result.items, final_text, analyzer_results
 
-    def deanonymize(self, ctx: FakerContext, text: str, entities):
+    def deanonymize(
+        self,
+        ctx: FakerContext,
+        text: str,
+        entities,
+        entity_replacements: Mapping[str, str] | None = None,
+        exact: bool = False,
+    ):
         def deanonymize_item(item):
             if item.operator == "encrypt":
                 return Decrypt().operate(text=item.text, params={"key": self._cr_key})
             return item.text
 
-        analized_anon_text, analized_anon_results = self.analyze(text)
+        analyzer_entities = list(entity_replacements) if entity_replacements else None
+        analized_anon_text, analized_anon_results = self.analyze(text, analyzer_entities)
         result = self._engine.anonymize(
             text=analized_anon_text,
             analyzer_results=analized_anon_results,
-            operators=self._deanon_operators(ctx),
+            operators=self._deanon_operators(ctx, entity_replacements, exact=exact),
         )
 
         deanonimized_text = result.text
@@ -212,10 +421,23 @@ def _anonimizer_factory(ctx: FakerContext, run_entities: List[str] = None):
     return anonimizer, deanonimizer, analyze
 
 class PalimpsestSession:
-    def __init__(self, processor: "Palimpsest", session_id: str = None):
+    def __init__(
+        self,
+        processor: "Palimpsest",
+        session_id: str = None,
+        entity_replacements=None,
+    ):
         self.session_id = session_id or str(uuid4())
         self._processor = processor
         self._ctx = FakerContext(locale=processor._locale)
+        self._entity_replacements = _normalize_entity_replacements(entity_replacements)
+        self._exact_deanonymization = (
+            self._entity_replacements is not None
+            and any(
+                strategy == TYPED_PLACEHOLDER_REPLACEMENT
+                for strategy in self._entity_replacements.values()
+            )
+        )
         self._anon_entries_by_text = OrderedDict()
         self._anon_analysis = None
         self._anon_analized_text = None
@@ -229,6 +451,14 @@ class PalimpsestSession:
     @property
     def closed(self) -> bool:
         return self._closed
+
+    @property
+    def entity_replacements(self) -> OrderedDict[str, str] | None:
+        return (
+            OrderedDict(self._entity_replacements)
+            if self._entity_replacements is not None
+            else None
+        )
 
     def _ensure_open(self):
         if self._closed:
@@ -290,8 +520,32 @@ class Palimpsest():
         self._run_entities = run_entities
         self._runtime = _runtime_factory(run_entities)
 
-    def create_session(self, session_id: str = None) -> PalimpsestSession:
-        return PalimpsestSession(self, session_id=session_id)
+    def _validate_entity_replacements(self, entity_replacements) -> None:
+        if entity_replacements is None or self._run_entities is None:
+            return
+        unsupported = [
+            entity_type
+            for entity_type in entity_replacements
+            if entity_type not in self._run_entities
+        ]
+        if unsupported:
+            raise ValueError(
+                "Session entity replacements must be a subset of processor "
+                f"run_entities. Unsupported for this processor: {unsupported!r}"
+            )
+
+    def create_session(
+        self,
+        session_id: str = None,
+        entity_replacements=None,
+    ) -> PalimpsestSession:
+        normalized = _normalize_entity_replacements(entity_replacements)
+        self._validate_entity_replacements(normalized)
+        return PalimpsestSession(
+            self,
+            session_id=session_id,
+            entity_replacements=normalized,
+        )
 
     def _require_session(self, session: PalimpsestSession = None) -> PalimpsestSession:
         if session is None:
@@ -310,17 +564,33 @@ class Palimpsest():
         return session
 
     def _anonymize_session(self, session: PalimpsestSession, text: str) -> str:
-        session._anonimized_text, entries, session._anon_analized_text, session._anon_analysis = self._runtime.anonymize(session._ctx, text)
+        session._anonimized_text, entries, session._anon_analized_text, session._anon_analysis = self._runtime.anonymize(
+            session._ctx,
+            text,
+            session._entity_replacements,
+        )
         session._store_entries(entries)
         if self._verbose:
             debug_log("ANONIMIZATION", text, session._anonimized_text, entries, session._ctx, session._anon_analized_text, session._anon_analysis)
         return session._anonimized_text
 
     def _deanonymize_session(self, session: PalimpsestSession, anonymized_text: str) -> str:
+        if session._exact_deanonymization:
+            session._deanonimized_text = session._ctx.deanonymize_exact_text(
+                anonymized_text,
+            )
+            session._deanon_analysis = []
+            session._deanon_analized_text = anonymized_text
+            if self._verbose:
+                debug_log("DEANONIMIZATION", anonymized_text, session._deanonimized_text, [], session._ctx, session._deanon_analized_text, session._deanon_analysis)
+            return session._deanonimized_text
+
         session._deanonimized_text, deanon_entries, session._deanon_analized_text, session._deanon_analysis = self._runtime.deanonymize(
             session._ctx,
             anonymized_text,
             session._entries(),
+            session._entity_replacements,
+            exact=session._exact_deanonymization,
         )
         if self._verbose:
             debug_log("DEANONIMIZATION", anonymized_text, session._deanonimized_text, deanon_entries, session._ctx, session._deanon_analized_text, session._deanon_analysis)

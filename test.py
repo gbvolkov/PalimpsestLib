@@ -12,7 +12,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 
-from palimpsest import Palimpsest
+from palimpsest import EntityReplacement, Palimpsest
 
 import logging
 logger = logging.getLogger(__name__)
@@ -46,6 +46,22 @@ anon_entities = [
     ,"INN"
     ,"RU_BANK_ACC"
     ,"TICKET_NUMBER"
+]
+
+anon_entity_replacements = [
+    EntityReplacement("RU_PERSON", "typed_placeholder"),
+    EntityReplacement("PERSON", "typed_placeholder"),
+    EntityReplacement("RU_ADDRESS", "typed_placeholder"),
+    EntityReplacement("EMAIL_ADDRESS", "typed_placeholder"),
+    EntityReplacement("CREDIT_CARD", "fake"),
+    EntityReplacement("PHONE_NUMBER", "typed_placeholder"),
+    EntityReplacement("IP_ADDRESS", "fake"),
+    EntityReplacement("URL", "typed_placeholder"),
+    EntityReplacement("RU_PASSPORT", "fake"),
+    EntityReplacement("SNILS", "fake"),
+    EntityReplacement("INN", "fake"),
+    EntityReplacement("RU_BANK_ACC", "fake"),
+    EntityReplacement("TICKET_NUMBER", "typed_placeholder"),
 ]
 
 processor = Palimpsest(verbose=True, run_entities=anon_entities, locale="en-US")
@@ -101,7 +117,10 @@ def generate_answer(system_prompt: str, user_request: str, llm_provider: str = "
         ]
     )
     print(f"Original request: {user_request}\n\n")
-    session = processor.create_session()
+    session = processor.create_session(
+        session_id="llm-demo",
+        entity_replacements=anon_entity_replacements,
+    )
     anonymized_request = anonymize(user_request, session=session, language="en")
     print(f"Anonymized request: {anonymized_request}\n\n")
     llm = make_llm(llm_provider, llm_parameters)

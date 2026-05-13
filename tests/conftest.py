@@ -71,7 +71,7 @@ def lightweight_palimpsest_factory(monkeypatch):
         def __init__(self, run_entities=None):
             calls["run_entities"] = run_entities
 
-        def anonymize(self, ctx, text):
+        def anonymize(self, ctx, text, entity_replacements=None):
             if not isinstance(text, str):
                 raise TypeError("text must be str")
             anon_calls = calls["anon"]
@@ -88,7 +88,14 @@ def lightweight_palimpsest_factory(monkeypatch):
             )
             return fake, [item], text, []
 
-        def deanonymize(self, ctx, text, entries):
+        def deanonymize(
+            self,
+            ctx,
+            text,
+            entries,
+            entity_replacements=None,
+            exact=False,
+        ):
             if not isinstance(text, str):
                 raise TypeError("text must be str")
             deanon_calls = calls["deanon"]

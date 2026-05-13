@@ -14,6 +14,25 @@ from ..utils.addr_unifier import unify_address
 
 MAX_FAKE_GENERATION_ATTEMPTS = 10
 
+_TYPED_PLACEHOLDER_PREFIXES = {
+    "PERSON": "PERSON",
+    "Person": "PERSON",
+    "RU_PERSON": "PERSON",
+    "PHONE_NUMBER": "PHONE",
+    "EMAIL_ADDRESS": "EMAIL",
+    "CREDIT_CARD": "CREDIT_CARD",
+    "IP_ADDRESS": "IP",
+    "URL": "URL",
+    "RU_ADDRESS": "ADDRESS",
+    "RU_ORGANIZATION": "ORGANIZATION",
+    "RU_CITY": "CITY",
+    "RU_PASSPORT": "PASSPORT",
+    "SNILS": "SNILS",
+    "INN": "INN",
+    "RU_BANK_ACC": "BANK_ACC",
+    "TICKET_NUMBER": "TICKET",
+}
+
 class FakerContext:
     """
     A context that finds every function named fake_* in the fakers module
@@ -40,6 +59,8 @@ class FakerContext:
         # each context gets its own two maps
         self._true: dict[str, dict] = {}
         self._faked: dict[str, dict] = {}
+        self._exact_faked: dict[str, dict] = {}
+        self._placeholder_counters: dict[str, int] = {}
 
         # wrap & bind every fake_* as an instance method
         phone_func = None
@@ -68,6 +89,8 @@ class FakerContext:
     def reset(self):
         self._true: dict[str, dict] = {}
         self._faked: dict[str, dict] = {}
+        self._exact_faked: dict[str, dict] = {}
+        self._placeholder_counters: dict[str, int] = {}
 
 
 
@@ -90,6 +113,11 @@ class FakerContext:
             f"true={value!r}, "
             f"attempts={MAX_FAKE_GENERATION_ATTEMPTS}"
         )
+
+    def _store_mapping(self, true_hash: str, fake_hash: str, entry: dict) -> None:
+        self._true[true_hash] = entry
+        self._faked[fake_hash] = entry
+        self._exact_faked[entry["fake"]] = entry
 
     def _faker_for_function(self, name: str):
         locale_key = self._fake_func_locale.get(name, "default")
@@ -128,8 +156,7 @@ class FakerContext:
             )
 
             # record forward and backward
-            self._true[h] = entry
-            self._faked[fake_hash] = entry
+            self._store_mapping(h, fake_hash, entry)
 
             return fake_val
         return wrapper
@@ -152,8 +179,7 @@ class FakerContext:
                 lambda fake: {"true": value, "fake": fake},
             )
 
-            self._true[h] = entry
-            self._faked[fake_hash] = entry
+            self._store_mapping(h, fake_hash, entry)
 
             return fake_val
         return wrapper
@@ -185,6 +211,7 @@ class FakerContext:
 
             self._true[h] = {**entry, "fuzzy_key": source_fuzzy_key}
             self._faked[fake_hash] = entry
+            self._exact_faked[entry["fake"]] = entry
             return fake_val
         return wrapper
 
@@ -215,7 +242,69 @@ class FakerContext:
             )
             raise
         return "\n".join(sorted(unified_addr.fuzzy_keys))
+
+    def typed_placeholder_prefix(self, entity_type: str) -> str:
+        prefix = _TYPED_PLACEHOLDER_PREFIXES.get(entity_type)
+        if prefix:
+            return prefix
+        return "".join(
+            char if char.isalnum() else "_"
+            for char in entity_type.upper()
+        ).strip("_") or "ENTITY"
+
+    def _next_typed_placeholder(self, prefix: str) -> str:
+        while True:
+            next_index = self._placeholder_counters.get(prefix, 0) + 1
+            self._placeholder_counters[prefix] = next_index
+            placeholder = f"{prefix}_{next_index:03d}"
+            if placeholder not in self._exact_faked:
+                return placeholder
+
+    def typed_placeholder(
+        self,
+        entity_type: str,
+        value: str,
+        true_hash_func: Callable[[str], str] | None = None,
+    ) -> str:
+        if value == "PII":
+            return value
+
+        hash_func = true_hash_func or calc_hash
+        prefix = self.typed_placeholder_prefix(entity_type)
+        true_hash = f"typed-placeholder:{prefix}:{hash_func(value)}"
+        if true_hash in self._true:
+            return self._true[true_hash]["fake"]
+
+        placeholder = self._next_typed_placeholder(prefix)
+        entry = {
+            "true": value,
+            "fake": placeholder,
+            "entity_type": entity_type,
+            "replacement_strategy": "typed_placeholder",
+            "exact": True,
+        }
+        self._store_mapping(
+            true_hash,
+            f"typed-placeholder-fake:{placeholder}",
+            entry,
+        )
+        return placeholder
     
+    def defake_exact(self, fake):
+        if fake == 'PII':
+            return fake
+        entry = self._exact_faked.get(fake)
+        return entry.get("true") if entry else fake
+
+    def deanonymize_exact_text(self, text: str) -> str:
+        if not isinstance(text, str):
+            raise TypeError("text must be str")
+        restored = text
+        for fake in sorted(self._exact_faked, key=len, reverse=True):
+            if fake != "PII":
+                restored = restored.replace(fake, self._exact_faked[fake]["true"])
+        return restored
+
     def defake(self, fake):
         if fake == 'PII':
             return fake

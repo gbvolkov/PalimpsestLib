@@ -57,6 +57,40 @@ deanon = session.deanonimize(answer)
 
 ```
 
+Typed placeholders can be configured per session instead of realistic fake
+values. When a session uses any typed placeholder, deanonymization is exact text
+replacement for that session, without fuzzy matching:
+
+```python
+from palimpsest import EntityReplacement, Palimpsest
+
+processor = Palimpsest(run_entities=["PERSON", "PHONE_NUMBER"])
+session = processor.create_session(
+    session_id="crm-request-typed",
+    entity_replacements=[
+        EntityReplacement("PERSON", "typed_placeholder"),
+        EntityReplacement("PHONE_NUMBER", "typed_placeholder"),
+    ],
+)
+
+anon = session.anonymize("John Williams can be reached at 445856786")
+# "PERSON_001 can be reached at PHONE_001"
+
+deanon = session.deanonymize("Contact PERSON_001 via PHONE_001")
+# "Contact John Williams via 445856786"
+```
+
+Use `"fake"` for entities which should keep realistic fake values:
+
+```python
+session = processor.create_session(
+    entity_replacements=[
+        ("PERSON", "fake"),
+        ("PHONE_NUMBER", "typed_placeholder"),
+    ],
+)
+```
+
 ## Configuration & Logging
 
 The library sets some environment variables in `config.py`.
